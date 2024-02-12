@@ -1,7 +1,7 @@
 /*
  * file name:       HeaderFetcher.cpp
  * created at:      2024/01/20
- * last modified:   2024/02/01
+ * last modified:   2024/02/12
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -39,7 +39,7 @@ QHash<QString, QString> HeaderFetcher::getHeaderDict() const {
     return this->request.getHeaderDict();
 }
 quint64 HeaderFetcher::getContentSize() const {
-    return this->request.getHeaderDict().value("accept-ranges", "0").toUInt();
+    return this->request.getHeaderDict().value("content-length", "0").toUInt();
 }
 QString HeaderFetcher::getDataUnit() const {
     return this->request.getHeaderDict().value("accept-ranges", "none");
