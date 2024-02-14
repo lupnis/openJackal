@@ -13,6 +13,7 @@ SOURCES += \
     RequestMeta.cpp \
     HeaderFetcher.cpp \
     FileFetcher.cpp \
+    TaskRunner.cpp \
     main.cpp
 
 # Default rules for deployment.
@@ -25,6 +26,7 @@ HEADERS += \
     Database.h \
     RequestMeta.h \
     HeaderFetcher.h \
+    TaskRunner.h \
     FileFetcher.h
 
 
