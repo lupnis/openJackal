@@ -1,7 +1,7 @@
 /*
  * file name:       FileFetcher.h
  * created at:      2024/01/23
- * last modified:   2024/02/01
+ * last modified:   2024/02/14
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -24,10 +24,11 @@ class FileFetcher : public QObject {
     FileFetcher(QString proxy_host = "", quint16 proxy_port = 0,
                 QNetworkProxy::ProxyType proxy_type =
                     QNetworkProxy::ProxyType::HttpProxy,
-                quint32 timeout = 60, quint32 max_retries = 8,
+                quint32 timeout = 600, quint32 max_retries = 8,
                 qint64 buffer_size = 1048576);
 
     ~FileFetcher();
+    FileFetcher& operator=(const FileFetcher&){return *this;}
 
     Mode getMode() const;
     Status getRequestStatus() const;
@@ -46,7 +47,7 @@ class FileFetcher : public QObject {
     void setProxy(QString proxy_host = "", quint16 proxy_port = 0,
                   QNetworkProxy::ProxyType proxy_type =
                       QNetworkProxy::ProxyType::HttpProxy);
-    void setTimeout(quint32 timeout = 60);
+    void setTimeout(quint32 timeout = 600);
     void setMaxRetries(quint32 max_retries = 8);
     void setBufferSize(qint64 buffer_size = 1048576);
 
@@ -67,6 +68,7 @@ class FileFetcher : public QObject {
     QString file_path;
     QByteArray file_data;
     QTimer* tick_timer = nullptr;
+    QThread* file_write_thread_ptr = nullptr;
     Status fetcher_status = Status::Init;
     QMutex lock;
 };
