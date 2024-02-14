@@ -21,9 +21,14 @@ FileFetcher::FileFetcher(QString proxy_host,
     this->request_count = 0;
     connect(&this->request, &RequestMeta::readyRead, this,
             &FileFetcher::onFileWriteReady);
+    this->tick_timer = new QTimer();
+    connect(this->tick_timer, &QTimer::timeout, this,
+            &FileFetcher::onRequestTimeout);
 }
 FileFetcher::~FileFetcher() {
     this->reset();
+    this->tick_timer->deleteLater();
+    this->tick_timer = nullptr;
 }
 
 Mode FileFetcher::getMode() const {
@@ -115,10 +120,7 @@ bool FileFetcher::run() {
                 }
             }
         }
-        this->tick_timer = new QTimer();
         this->tick_timer->setInterval(1000);
-        connect(this->tick_timer, &QTimer::timeout, this,
-                &FileFetcher::onRequestTimeout);
         this->tick_timer->start();
         this->request.run();
         return true;
@@ -139,11 +141,7 @@ void FileFetcher::abort() {
 
 void FileFetcher::reset() {
     this->abort();
-    if (this->tick_timer != nullptr) {
-        this->tick_timer->stop();
-        this->tick_timer->deleteLater();
-        this->tick_timer = nullptr;
-    }
+    this->tick_timer->stop();
     this->request.reset();
     this->countdown = this->timeout;
     this->request_count = 0;
