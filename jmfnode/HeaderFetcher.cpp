@@ -1,32 +1,47 @@
 /*
  * file name:       HeaderFetcher.cpp
  * created at:      2024/01/20
- * last modified:   2024/02/12
+ * last modified:   2024/02/14
  * author:          lupnis<lupnisj@gmail.com>
  */
 
 #include "HeaderFetcher.h"
 
 namespace JRequests {
-HeaderFetcher::HeaderFetcher(QString proxy_host, quint16 proxy_port,
+HeaderFetcher::HeaderFetcher(QString proxy_host,
+                             quint16 proxy_port,
                              QNetworkProxy::ProxyType proxy_type,
-                             quint32 timeout, quint32 max_retries) {
+                             quint32 timeout,
+                             quint32 max_retries) {
     this->request.setProxy(proxy_host, proxy_port, proxy_type);
     this->countdown = this->timeout = timeout;
     this->max_retries = max_retries;
     this->request_count = 0;
+    this->tick_timer = new QTimer();
+    connect(this->tick_timer, &QTimer::timeout, this,
+            &HeaderFetcher::onRequestTimeout);
 }
-HeaderFetcher::~HeaderFetcher() { this->reset(); }
+HeaderFetcher::~HeaderFetcher() {
+    this->reset();
+    this->tick_timer->deleteLater();
+    this->tick_timer = nullptr;
+}
 
-Mode HeaderFetcher::getMode() const { return this->request.getMode(); }
+Mode HeaderFetcher::getMode() const {
+    return this->request.getMode();
+}
 Status HeaderFetcher::getRequestStatus() const {
     return this->request.getStatus();
 }
-Status HeaderFetcher::getFetcherStatus() const { return this->fetcher_status; }
+Status HeaderFetcher::getFetcherStatus() const {
+    return this->fetcher_status;
+}
 bool HeaderFetcher::getFinished() const {
     return this->fetcher_status == Status::Finished;
 }
-Result HeaderFetcher::getResult() const { return this->request.getResult(); }
+Result HeaderFetcher::getResult() const {
+    return this->request.getResult();
+}
 QPair<quint64, quint64> HeaderFetcher::getProgress() const {
     return this->request.getProgress();
 }
@@ -53,13 +68,18 @@ bool HeaderFetcher::getSliceAvailability() const {
 quint32 HeaderFetcher::getTimeConsumed() const {
     return this->timeout - this->countdown;
 }
-quint32 HeaderFetcher::getRequestCount() const { return this->request_count; }
+quint32 HeaderFetcher::getRequestCount() const {
+    return this->request_count;
+}
 
-void HeaderFetcher::setProxy(QString proxy_host, quint16 proxy_port,
+void HeaderFetcher::setProxy(QString proxy_host,
+                             quint16 proxy_port,
                              QNetworkProxy::ProxyType proxy_type) {
     this->request.setProxy(proxy_host, proxy_port, proxy_type);
 }
-void HeaderFetcher::setTimeout(quint32 timeout) { this->timeout = timeout; }
+void HeaderFetcher::setTimeout(quint32 timeout) {
+    this->timeout = timeout;
+}
 void HeaderFetcher::setMaxRetries(quint32 max_retries) {
     this->max_retries = max_retries;
 }
@@ -76,10 +96,7 @@ bool HeaderFetcher::run() {
     if (this->lock.tryLock()) {
         this->fetcher_status = Status::Fetching;
         this->request.run();
-        this->tick_timer = new QTimer(this);
         this->tick_timer->setInterval(1000);
-        connect(this->tick_timer, &QTimer::timeout, this,
-                &HeaderFetcher::onRequestTimeout);
         this->tick_timer->start();
         return true;
     }
@@ -95,11 +112,7 @@ void HeaderFetcher::abort() {
 
 void HeaderFetcher::reset() {
     this->abort();
-    if (this->tick_timer != nullptr) {
-        this->tick_timer->stop();
-        this->tick_timer->deleteLater();
-        this->tick_timer = nullptr;
-    }
+    this->tick_timer->stop();
     this->request.reset();
     this->countdown = this->timeout;
     this->request_count = 0;
