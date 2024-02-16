@@ -18,7 +18,7 @@
 
 namespace JConfigs {
 
-inline QJsonObject makeDefaultCondigs() {
+inline QJsonObject makeDefaultConfigs() {
     QHash<QString, QVariant> config_dict;
 
     config_dict["logging"] = JLogs::DEFAULT_LOG_CONFIG;
@@ -64,7 +64,7 @@ class JsonConfigHandler {
 
     void setFilePath(QString config_path);
     QString getFilePath() const;
-    void loadConfigs(QJsonObject default_configs = makeDefaultCondigs());
+    void loadConfigs(QJsonObject default_configs = makeDefaultConfigs());
     void saveConfigs();
 
     QVariant get(QString path, QJsonValue repl = QJsonValue()) const;
