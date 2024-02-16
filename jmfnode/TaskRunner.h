@@ -1,7 +1,7 @@
 /*
  * file name:       TaskRunner.h
  * created at:      2024/02/01
- * last modified:   2024/02/14
+ * last modified:   2024/02/17
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -104,8 +104,8 @@ class TaskRunner : public QObject {
         quint8 task_fetch_max_retries = 8,
         qint64 task_fetch_buffer_size = 104857500);
 
-    void addTaskToQueue(TaskDetails task, bool add_to_main_queue = true);
-    void addTaskToQueue(QString mirror_name, QString url_path,
+    bool addTaskToQueue(TaskDetails task, bool add_to_main_queue = true);
+    bool addTaskToQueue(QString mirror_name, QString url_path,
                         QString storage_path, QString proxy_host = "",
                         quint16 proxy_port = 0,
                         QNetworkProxy::ProxyType proxy_type =
