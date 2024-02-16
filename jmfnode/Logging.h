@@ -1,7 +1,7 @@
 /*
  * file name:       Logging.h
  * created at:      2024/01/18
- * last modified:   2024/01/20
+ * last modified:   2024/02/16
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -273,9 +273,6 @@ class Logger {
 
     QMutex lock;
 };
-
-static JLogs::Logger globalLogger;
-
 }  // namespace JLogs
 
 #endif
