@@ -45,9 +45,7 @@ bool Logger::setConfig(QString key, QVariant value) {
 }
 
 void Logger::updateConfig(QHash<QString, QVariant> config) {
-    qDebug() << "before" << this->config << "\n\n";
     this->config = config;
-    qDebug() <<"after" << this->config << "\n\n\n";
 }
 
 void Logger::log(const S& content, Level level, Tag tag, bool ignore_buffer) {
