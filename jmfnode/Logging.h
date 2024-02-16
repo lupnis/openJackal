@@ -241,6 +241,7 @@ class Logger {
     QVariant getConfig(QString key);
     QVariant getConfig(QString key, QVariant repl);
     bool setConfig(QString key, QVariant value);
+    void updateConfig(QHash<QString, QVariant> config = DEFAULT_LOG_CONFIG);
 
     void log(const S &content, Level level = Level::INFO, Tag tag = Tag::NO_TAG,
              bool ignore_buffer = false);
