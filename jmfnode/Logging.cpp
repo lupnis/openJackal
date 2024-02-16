@@ -1,7 +1,7 @@
 /*
  * file name:       Logging.cpp
  * created at:      2024/01/18
- * last modified:   2024/01/20
+ * last modified:   2024/02/16
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -25,12 +25,14 @@ Logger::Logger(QHash<QString, QVariant> config) : config(config) {
 Logger::~Logger() {}
 
 QVariant Logger::getConfig(QString key) {
-    if (!this->config.contains(key)) throw "invalid key: " + key.toStdString();
+    if (!this->config.contains(key))
+        throw "invalid key: " + key.toStdString();
     return this->config[key];
 }
 
 QVariant Logger::getConfig(QString key, QVariant repl) {
-    if (!this->config.contains(key)) return repl;
+    if (!this->config.contains(key))
+        return repl;
     return this->config[key];
 }
 
@@ -40,6 +42,10 @@ bool Logger::setConfig(QString key, QVariant value) {
         return true;
     }
     return false;
+}
+
+void Logger::updateConfig(QHash<QString, QVariant> config) {
+    this->config.swap(config);
 }
 
 void Logger::log(const S& content, Level level, Tag tag, bool ignore_buffer) {
@@ -145,7 +151,8 @@ S Logger::make_level_styled(Level level) {
 }
 
 S Logger::make_tag_styled(Tag tag) {
-    if (tag == Tag::NO_TAG) return S();
+    if (tag == Tag::NO_TAG)
+        return S();
 
     return S(
         this->getConfig(QString("tag_%1_text").arg(TAGS_MAP[tag])).toString(),
@@ -168,6 +175,8 @@ void Logger::buffer_flush_check() {
     }
 }
 
-void Logger::drop_logs() { this->log_buffer.clear(); }
+void Logger::drop_logs() {
+    this->log_buffer.clear();
+}
 
 }  // namespace JLogs
