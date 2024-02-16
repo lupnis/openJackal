@@ -53,6 +53,7 @@ inline QJsonObject makeDefaultConfigs() {
 
     config_dict["node"] =
         QHash<QString, QVariant>({{"node_id", "jackalmfn_node_default"},
+                                  {"num_runners", 8},
                                   {"node_task_receiving_interval", 5000}});
 }
 
