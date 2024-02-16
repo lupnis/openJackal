@@ -1,14 +1,16 @@
 /*
  * file name:       Configurations.cpp
  * created at:      2024/02/14
- * last modified:   2024/02/16
+ * last modified:   2024/02/17
  * author:          lupnis<lupnisj@gmail.com>
  */
 
 #include "Configurations.h"
 
 namespace JConfigs {
-JsonConfigHandler::JsonConfigHandler() {}
+JsonConfigHandler::JsonConfigHandler() {
+    this->src_path = QDir().absoluteFilePath(this->src_path).replace('\\', '/');
+}
 JsonConfigHandler::JsonConfigHandler(const JsonConfigHandler& rvalue) {
     this->src_path = rvalue.getFilePath();
 }
