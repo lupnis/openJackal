@@ -1,7 +1,7 @@
 /*
  * file name:       TaskRunner.cpp
  * created at:      2024/02/01
- * last modified:   2024/02/14
+ * last modified:   2024/02/17
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -81,20 +81,29 @@ bool TaskRunner::updateConfigurations(quint32 task_queue_refresh_interval,
     return false;
 }
 
-void TaskRunner::addTaskToQueue(TaskDetails task, bool add_to_main_queue) {
+bool TaskRunner::addTaskToQueue(TaskDetails task, bool add_to_main_queue) {
+    if ((this->main_queue.size() + this->loop_queue.size()) >=
+        this->task_queue_max_size) {
+        return false;
+    }
     if (add_to_main_queue) {
         this->main_queue.push_back(task);
     } else {
         this->loop_queue.push_back(task);
     }
+    return true;
 }
-void TaskRunner::addTaskToQueue(QString mirror_name,
+bool TaskRunner::addTaskToQueue(QString mirror_name,
                                 QString url_path,
                                 QString storage_path,
                                 QString proxy_host,
                                 quint16 proxy_port,
                                 QNetworkProxy::ProxyType proxy_type,
                                 bool add_to_main_queue) {
+    if ((this->main_queue.size() + this->loop_queue.size()) >=
+        this->task_queue_max_size) {
+        return false;
+    }
     if (add_to_main_queue) {
         this->main_queue.push_back({mirror_name, url_path, storage_path,
                                     proxy_host, proxy_port, proxy_type});
@@ -102,6 +111,7 @@ void TaskRunner::addTaskToQueue(QString mirror_name,
         this->loop_queue.push_back({mirror_name, url_path, storage_path,
                                     proxy_host, proxy_port, proxy_type});
     }
+    return true;
 }
 
 QList<TaskDetails> TaskRunner::getMainQueue() const {
