@@ -73,7 +73,7 @@ class JsonConfigHandler {
     void set(QString path, QJsonValue value);
 
    private:
-    QString src_path;
+    QString src_path = "node_properties.json";
     QHash<QString, QVariant> configs;
 };
 }  // namespace JConfigs
