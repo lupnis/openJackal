@@ -1,7 +1,7 @@
 /*
  * file name:       Logging.cpp
  * created at:      2024/01/18
- * last modified:   2024/02/16
+ * last modified:   2024/02/17
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -45,7 +45,9 @@ bool Logger::setConfig(QString key, QVariant value) {
 }
 
 void Logger::updateConfig(QHash<QString, QVariant> config) {
-    this->config.swap(config);
+    qDebug() << "before" << this->config << "\n\n";
+    this->config = config;
+    qDebug() <<"after" << this->config << "\n\n\n";
 }
 
 void Logger::log(const S& content, Level level, Tag tag, bool ignore_buffer) {
@@ -82,17 +84,17 @@ void Logger::flushNow() {
     this->lock.lock();
     if (this->getConfig("file_log").toBool()) {
         QFile log_file(
-            this->getConfig("log_styledtored_path").toString() +
+            this->getConfig("log_stored_path").toString() +
             this->getConfig("log_name").toString() + "_" +
             QDateTime().currentDateTime().toString(
-                this->getConfig("log_add_date_to_styleduffix").toBool()
-                    ? this->getConfig("log_filename_date_format_styledtr")
+                this->getConfig("log_add_date_to_suffix").toBool()
+                    ? this->getConfig("log_filename_date_format_str")
                           .toString()
                     : "") +
-            "." + this->getConfig("log_styleduffix").toString());
-        if (log_file.open(this->getConfig("log_append").toBool()
-                              ? QIODevice::Append
-                              : QIODevice::Truncate)) {
+            "." + this->getConfig("log_suffix").toString());
+        if (log_file.open(QIODevice::WriteOnly | (this->getConfig("log_append").toBool()
+                                                      ? QIODevice::Append
+                                                      : QIODevice::Truncate))) {
             for (QString& log : this->log_buffer) {
                 log_file.write(log.toUtf8());
             }
