@@ -39,14 +39,12 @@ TaskRunner::TaskRunner(quint32 task_queue_refresh_interval,
     this->runner_loop_timer = new QTimer();
     connect(this->runner_loop_timer, &QTimer::timeout, this,
             &TaskRunner::onLoopTimerTimeout);
-    qDebug() << "ok construct";
 }
 
 TaskRunner::~TaskRunner() {
     this->terminateRunnerLoop();
     this->runner_loop_timer->deleteLater();
     this->runner_loop_timer = nullptr;
-    qDebug() << "ok inconstruct";
 }
 
 bool TaskRunner::updateConfigurations(quint32 task_queue_refresh_interval,
