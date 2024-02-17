@@ -286,6 +286,7 @@ bool TaskRunner::startRunnerLoop() {
         }
         this->runner_loop_timer->setInterval(this->task_queue_refresh_interval);
         this->runner_loop_timer->start();
+        return true;
     }
     return false;
 }
