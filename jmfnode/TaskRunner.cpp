@@ -293,7 +293,7 @@ void TaskRunner::stopRunnerLoop() {
     this->runner_loop_timer->stop();
     this->header_fetcher.reset();
     this->current_running_task.currentStage = TaskStage::Init;
-    for (int i = 0; i < this->task_file_slices; ++i) {
+    for (int i = 0; i < this->fetchers.size(); ++i) {
         this->fetchers[i]->deleteLater();
         this->fetchers[i] = nullptr;
     }
