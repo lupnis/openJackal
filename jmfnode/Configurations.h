@@ -52,8 +52,7 @@ inline QJsonObject makeDefaultConfigs() {
                                   {"task_fetch_buffer_size", 104857500}});
 
     config_dict["node"] =
-        QHash<QString, QVariant>({{"node_id", "jackalmfn_node_default"},
-                                  {"num_runners", 8},
+        QHash<QString, QVariant>({{"num_runners", 8},
                                   {"node_task_receiving_interval", 5000}});
     return QJsonObject::fromVariantHash(config_dict);
 }
