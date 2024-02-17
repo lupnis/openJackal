@@ -1,7 +1,7 @@
 /*
  * file name:       HeaderFetcher.cpp
  * created at:      2024/01/20
- * last modified:   2024/02/14
+ * last modified:   2024/02/17
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -117,6 +117,7 @@ void HeaderFetcher::reset() {
     this->countdown = this->timeout;
     this->request_count = 0;
     this->fetcher_status = Status::Init;
+    this->lock.tryLock();
     this->lock.unlock();
 }
 
