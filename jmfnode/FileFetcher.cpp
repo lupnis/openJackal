@@ -148,6 +148,7 @@ void FileFetcher::reset() {
     this->file_data.clear();
     this->file_path.clear();
     this->fetcher_status = Status::Init;
+    this->lock.tryLock();
     this->lock.unlock();
 }
 
