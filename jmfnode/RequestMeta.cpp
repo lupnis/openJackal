@@ -1,7 +1,7 @@
 /*
  * file name:       RequestMeta.cpp
  * created at:      2024/01/18
- * last modified:   2024/02/01
+ * last modified:   2024/02/17
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -154,6 +154,7 @@ void RequestMeta::reset() {
     this->status = Status::Init;
     this->received = this->total = 0;
     this->headers.clear();
+    this->lock.tryLock();
     this->lock.unlock();
 }
 
