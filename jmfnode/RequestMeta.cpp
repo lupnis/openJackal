@@ -1,7 +1,7 @@
 /*
  * file name:       RequestMeta.cpp
  * created at:      2024/01/18
- * last modified:   2024/02/17
+ * last modified:   2024/02/18
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -29,8 +29,8 @@ QByteArray RequestMeta::getReplyData() const {
     QByteArray ret;
     if (this->received_queue.isEmpty() == false) {
         ret = this->received_queue.front();
+        this->received_queue.pop_front();
     }
-    this->received_queue.pop_front();
     return ret;
 }
 
