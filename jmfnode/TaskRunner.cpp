@@ -302,7 +302,8 @@ void TaskRunner::stopRunnerLoop() {
     this->fetchers.clear();
     /* sometimes program crashes because of this
      * if (this->stage_thread_ptr != nullptr) {
-        this->stage_thread_ptr->wait();
+        this->stage_thread_ptr->quit();//exit(0);//terminate();//wait();
+        ^^^^^^^^ error occurs here
         this->stage_thread_ptr->deleteLater();
         this->stage_thread_ptr = nullptr;
     }*/
