@@ -259,6 +259,9 @@ QList<quint32> TaskRunner::getFetchersTimeConsumed() const {
 TaskStage TaskRunner::getCurrentTaskStage() const {
     return this->current_running_task.currentStage;
 }
+bool TaskRunner::getIsRunnerRunning() const {
+    return this->runner_running;
+}
 
 void TaskRunner::dropCurrentRunningTask(bool add_to_loop_queue) {
     if (this->current_running_task.hasTask()) {
@@ -286,6 +289,7 @@ bool TaskRunner::startRunnerLoop() {
         }
         this->runner_loop_timer->setInterval(this->task_queue_refresh_interval);
         this->runner_loop_timer->start();
+        this->runner_running = true;
         return true;
     }
     return false;
@@ -309,6 +313,7 @@ void TaskRunner::stopRunnerLoop() {
     }*/
     this->lock.tryLock();
     this->lock.unlock();
+    this->runner_running = false;
 }
 void TaskRunner::terminateRunnerLoop() {
     this->stopRunnerLoop();
