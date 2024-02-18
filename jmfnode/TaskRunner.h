@@ -1,7 +1,7 @@
 /*
  * file name:       TaskRunner.h
  * created at:      2024/02/01
- * last modified:   2024/02/18
+ * last modified:   2024/02/19
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -60,7 +60,9 @@ struct TaskDetails {
         this->proxyHost = rvalue.proxyHost;
         this->proxyPort = rvalue.proxyPort;
         this->proxyType = rvalue.proxyType;
+        this->numFetchers = rvalue.numFetchers;
         this->failedCount = rvalue.failedCount;
+        this->currentStage = rvalue.currentStage;
     }
 
     TaskDetails& operator=(const TaskDetails& rvalue) {
@@ -70,7 +72,9 @@ struct TaskDetails {
         this->proxyHost = rvalue.proxyHost;
         this->proxyPort = rvalue.proxyPort;
         this->proxyType = rvalue.proxyType;
+        this->numFetchers = rvalue.numFetchers;
         this->failedCount = rvalue.failedCount;
+        this->currentStage = rvalue.currentStage;
         return *this;
     }
     bool hasTask() { return this->mirrorName.size() && this->urlPath.size(); }
