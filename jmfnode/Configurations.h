@@ -1,7 +1,7 @@
 /*
  * file name:       Configurations.h
  * created at:      2024/02/14
- * last modified:   2024/02/17
+ * last modified:   2024/02/18
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -42,9 +42,9 @@ inline QJsonObject makeDefaultConfigs() {
                                   {"failed_task_requeue_interval", 2},
                                   {"task_max_retries", 5},
                                   {"task_file_slices", 8},
-                                  {"store_slices_in_memory", true},
-                                  {"slices_storage_root_path", ""},
-                                  {"dest_storage_root_path", ""},
+                                  {"store_slices_in_memory", false},
+                                  {"slices_storage_root_path", "./tmp"},
+                                  {"dest_storage_root_path", "./archive"},
                                   {"task_head_timeout", 60},
                                   {"task_head_max_retries", 8},
                                   {"task_fetch_timeout", 600},
