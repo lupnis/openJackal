@@ -259,6 +259,9 @@ QList<quint32> TaskRunner::getFetchersTimeConsumed() const {
 TaskStage TaskRunner::getCurrentTaskStage() const {
     return this->current_running_task.currentStage;
 }
+TaskDetails TaskRunner::getCurrentTaskDetails() const {
+    return this->current_running_task;
+}
 bool TaskRunner::getIsRunnerRunning() const {
     return this->runner_running;
 }
