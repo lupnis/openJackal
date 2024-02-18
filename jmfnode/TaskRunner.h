@@ -133,6 +133,7 @@ class TaskRunner : public QObject {
     QList<QPair<qint64, qint64>> getCurrentFetcherProgress() const;
     QList<quint32> getFetchersTimeConsumed() const;
     TaskStage getCurrentTaskStage() const;
+    TaskDetails getCurrentTaskDetails() const;
     bool getIsRunnerRunning() const;
 
     void dropCurrentRunningTask(bool add_to_loop_queue = false);
