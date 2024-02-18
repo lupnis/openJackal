@@ -1,7 +1,7 @@
 /*
  * file name:       TaskRunner.h
  * created at:      2024/02/01
- * last modified:   2024/02/17
+ * last modified:   2024/02/18
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -133,6 +133,7 @@ class TaskRunner : public QObject {
     QList<QPair<qint64, qint64>> getCurrentFetcherProgress() const;
     QList<quint32> getFetchersTimeConsumed() const;
     TaskStage getCurrentTaskStage() const;
+    bool getIsRunnerRunning() const;
 
     void dropCurrentRunningTask(bool add_to_loop_queue = false);
     bool startRunnerLoop();
@@ -180,6 +181,7 @@ class TaskRunner : public QObject {
     QThread* stage_thread_ptr = nullptr;
     quint8 queue_index = 1;
     QMutex lock;
+    bool runner_running = false;
 };
 }  // namespace JackalMFN
 
