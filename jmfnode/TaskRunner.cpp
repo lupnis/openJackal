@@ -1,7 +1,7 @@
 /*
  * file name:       TaskRunner.cpp
  * created at:      2024/02/01
- * last modified:   2024/02/17
+ * last modified:   2024/02/18
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -295,12 +295,15 @@ void TaskRunner::stopRunnerLoop() {
     this->header_fetcher.reset();
     this->current_running_task.currentStage = TaskStage::Init;
     for (int i = 0; i < this->fetchers.size(); ++i) {
+        this->fetchers[i]->reset();
         this->fetchers[i]->deleteLater();
         this->fetchers[i] = nullptr;
     }
     this->fetchers.clear();
     if (this->stage_thread_ptr != nullptr) {
         this->stage_thread_ptr->terminate();
+        this->stage_thread_ptr->deleteLater();
+        this->stage_thread_ptr = nullptr;
     }
     this->lock.tryLock();
     this->lock.unlock();
