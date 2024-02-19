@@ -1,27 +1,40 @@
 /*
  * file name:       RequestMeta.cpp
  * created at:      2024/01/18
- * last modified:   2024/02/18
+ * last modified:   2024/02/19
  * author:          lupnis<lupnisj@gmail.com>
  */
 
 #include "RequestMeta.h"
 
 namespace JRequests {
-RequestMeta::RequestMeta(QString proxy_host, quint16 proxy_port,
+RequestMeta::RequestMeta(QString proxy_host,
+                         quint16 proxy_port,
                          QNetworkProxy::ProxyType proxy_type,
                          qint64 buffer_size) {
     this->init_manager();
     this->setProxy(proxy_host, proxy_port, proxy_type);
     this->setBufferSize(buffer_size);
 }
-RequestMeta::~RequestMeta() { this->reset(); }
+RequestMeta::~RequestMeta() {
+    this->reset();
+}
 
-Method RequestMeta::getMethod() const { return this->method; }
-Mode RequestMeta::getMode() const { return this->mode; }
-Status RequestMeta::getStatus() const { return this->status; }
-Result RequestMeta::getResult() const { return this->result; }
-qint64 RequestMeta::getBufferSize() const { return this->buffer_size; }
+Method RequestMeta::getMethod() const {
+    return this->method;
+}
+Mode RequestMeta::getMode() const {
+    return this->mode;
+}
+Status RequestMeta::getStatus() const {
+    return this->status;
+}
+Result RequestMeta::getResult() const {
+    return this->result;
+}
+qint64 RequestMeta::getBufferSize() const {
+    return this->buffer_size;
+}
 QPair<quint64, quint64> RequestMeta::getProgress() const {
     return {this->received, this->total};
 }
@@ -51,13 +64,16 @@ bool RequestMeta::hasNextPendingReply() const {
 bool RequestMeta::getFinished() const {
     return this->status == Status::Finished;
 }
-bool RequestMeta::getFailed() const { return this->result == Result::Failed; }
+bool RequestMeta::getFailed() const {
+    return this->result == Result::Failed;
+}
 
 QPair<QString, QHash<QString, QString>> RequestMeta::getTask() const {
     return {this->url, this->headers};
 }
 
-void RequestMeta::setProxy(QString proxy_host, quint16 proxy_port,
+void RequestMeta::setProxy(QString proxy_host,
+                           quint16 proxy_port,
                            QNetworkProxy::ProxyType proxy_type) {
     if (proxy_host == "") {
         proxy_host = "127.0.0.1";
@@ -81,7 +97,8 @@ bool RequestMeta::head(QString url, QHash<QString, QString> headers) {
 bool RequestMeta::get(QString url, QHash<QString, QString> headers) {
     return this->request(url, Method::GET, headers);
 }
-bool RequestMeta::request(QString url, Method method,
+bool RequestMeta::request(QString url,
+                          Method method,
                           QHash<QString, QString> headers) {
     if (this->lock.tryLock()) {
         this->url = url;
@@ -95,7 +112,7 @@ bool RequestMeta::request(QString url, Method method,
 }
 
 bool RequestMeta::run() {
-    if (this->lock.try_lock()) {
+    if (this->lock.tryLock()) {
         this->status = Status::Fetching;
         this->result = Result::Waiting;
         this->auto_mode_select();
@@ -223,12 +240,12 @@ void RequestMeta::onReplyFinished(QNetworkReply*) {
                                                it.value().toUtf8());
         }
         switch (this->method) {
-        case Method::GET:
-            this->reply = this->manager.get(this->network_request);
-            break;
-        case Method::HEAD:
-            this->reply = this->manager.head(this->network_request);
-            break;
+            case Method::GET:
+                this->reply = this->manager.get(this->network_request);
+                break;
+            case Method::HEAD:
+                this->reply = this->manager.head(this->network_request);
+                break;
         }
         this->reply->setReadBufferSize(this->buffer_size);
         connect(this->reply, &QNetworkReply::downloadProgress, this,
