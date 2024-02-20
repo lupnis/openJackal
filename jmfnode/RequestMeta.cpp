@@ -1,7 +1,7 @@
 /*
  * file name:       RequestMeta.cpp
  * created at:      2024/01/18
- * last modified:   2024/02/19
+ * last modified:   2024/02/21
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -38,12 +38,11 @@ qint64 RequestMeta::getBufferSize() const {
 QPair<quint64, quint64> RequestMeta::getProgress() const {
     return {this->received, this->total};
 }
-QByteArray RequestMeta::getReplyData() const {
-    QByteArray ret;
-    if (this->received_queue.isEmpty() == false) {
-        ret = this->received_queue.front();
-        this->received_queue.pop_front();
-    }
+QQueue<QByteArray> RequestMeta::getReplyData() const {
+    QQueue<QByteArray> ret;
+    ret = this->received_queue;
+    ret.detach();
+    this->received_queue.clear();
     return ret;
 }
 
@@ -58,9 +57,7 @@ QHash<QString, QString> RequestMeta::getHeaderDict() const {
     }
     return ret;
 }
-bool RequestMeta::hasNextPendingReply() const {
-    return this->received_queue.size();
-}
+
 bool RequestMeta::getFinished() const {
     return this->status == Status::Finished;
 }
