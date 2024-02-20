@@ -1,7 +1,7 @@
 /*
  * file name:       FileFetcher.cpp
  * created at:      2024/01/29
- * last modified:   2024/02/17
+ * last modified:   2024/02/20
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -134,8 +134,7 @@ void FileFetcher::abort() {
         this->request.abort();
     }
     if (this->file_write_thread_ptr != nullptr) {
-        this->file_write_thread_ptr->terminate();
-        this->file_write_thread_ptr = nullptr;
+         this->file_write_thread_ptr = nullptr;
     }
 }
 
@@ -173,7 +172,6 @@ void FileFetcher::onFileWriteReady() {
             }
         }
         this->request.blockSignals(false);
-        this->file_write_thread_ptr = nullptr;
         QThread::currentThread()->quit();
     });
     this->file_write_thread_ptr->start();
@@ -231,7 +229,6 @@ void FileFetcher::onRequestTimeout() {
                                 }
                             }
                             this->fetcher_status = Status::Finished;
-                            this->file_write_thread_ptr = nullptr;
                             QThread::currentThread()->quit();
                         });
                     this->file_write_thread_ptr->start();
