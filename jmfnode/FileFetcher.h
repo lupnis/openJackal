@@ -1,7 +1,7 @@
 /*
  * file name:       FileFetcher.h
  * created at:      2024/01/23
- * last modified:   2024/02/20
+ * last modified:   2024/02/21
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -58,7 +58,7 @@ class FileFetcher : public QObject {
     void reset();
 
    private slots:
-    void onFileWriteReady();
+    void onFileWriteReady(QByteArray data, bool last = false);
     void onRequestTimeout();
 
    private:
@@ -68,7 +68,6 @@ class FileFetcher : public QObject {
     QString file_path;
     QByteArray file_data;
     QTimer* tick_timer = nullptr;
-    QThread* file_write_thread_ptr = nullptr;
     Status fetcher_status = Status::Init;
     QMutex lock;
 };
