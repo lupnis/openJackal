@@ -38,11 +38,21 @@ qint64 RequestMeta::getBufferSize() const {
 QPair<quint64, quint64> RequestMeta::getProgress() const {
     return {this->received, this->total};
 }
-QQueue<QByteArray> RequestMeta::getReplyData() const {
-    QQueue<QByteArray> ret;
-    ret = this->received_queue;
-    ret.detach();
-    this->received_queue.clear();
+
+bool RequestMeta::hasNextPendingData() const {
+    return this->received_queue.size();
+}
+
+QByteArray RequestMeta::getReplyData() const {
+    QByteArray ret;
+    ret = this->received_queue.value(0);
+    if(this->received_queue.size()) {
+        QT_TRY {
+            this->received_queue.removeFirst();
+        } QT_CATCH(...) {
+
+        }
+    }
     return ret;
 }
 
@@ -127,12 +137,12 @@ bool RequestMeta::run() {
                                                it.value().toUtf8());
         }
         switch (this->method) {
-            case Method::GET:
-                this->reply = this->manager.get(this->network_request);
-                break;
-            case Method::HEAD:
-                this->reply = this->manager.head(this->network_request);
-                break;
+        case Method::GET:
+            this->reply = this->manager.get(this->network_request);
+            break;
+        case Method::HEAD:
+            this->reply = this->manager.head(this->network_request);
+            break;
         }
         this->reply->setReadBufferSize(this->buffer_size);
         connect(this->reply, &QNetworkReply::downloadProgress, this,
@@ -237,12 +247,12 @@ void RequestMeta::onReplyFinished(QNetworkReply*) {
                                                it.value().toUtf8());
         }
         switch (this->method) {
-            case Method::GET:
-                this->reply = this->manager.get(this->network_request);
-                break;
-            case Method::HEAD:
-                this->reply = this->manager.head(this->network_request);
-                break;
+        case Method::GET:
+            this->reply = this->manager.get(this->network_request);
+            break;
+        case Method::HEAD:
+            this->reply = this->manager.head(this->network_request);
+            break;
         }
         this->reply->setReadBufferSize(this->buffer_size);
         connect(this->reply, &QNetworkReply::downloadProgress, this,
