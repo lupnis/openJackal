@@ -39,21 +39,8 @@ QPair<quint64, quint64> RequestMeta::getProgress() const {
     return {this->received, this->total};
 }
 
-bool RequestMeta::hasNextPendingData() const {
-    return this->received_queue.size();
-}
-
 QByteArray RequestMeta::getReplyData() const {
-    QByteArray ret;
-    ret = this->received_queue.value(0);
-    if(this->received_queue.size()) {
-        QT_TRY {
-            this->received_queue.removeFirst();
-        } QT_CATCH(...) {
-
-        }
-    }
-    return ret;
+    return this->reply->readAll();
 }
 
 QHash<QString, QString> RequestMeta::getHeaderDict() const {
@@ -209,7 +196,6 @@ void RequestMeta::onReadyRead() {
             .toInt();
     if (this->reply->error() == QNetworkReply::NoError && status_code >= 200 &&
         status_code < 300) {
-        this->received_queue.push_back(this->reply->readAll());
         emit this->readyRead();
     }
 }
@@ -222,7 +208,6 @@ void RequestMeta::onReplyFinished(QNetworkReply*) {
             .toInt();
     if (this->reply->error() == QNetworkReply::NoError && status_code >= 200 &&
         status_code < 300) {
-        this->received_queue.push_back(this->reply->readAll());
         this->status = Status::Finished;
         this->result = Result::Succeeded;
         emit this->readyRead();
