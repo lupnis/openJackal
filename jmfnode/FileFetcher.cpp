@@ -161,11 +161,8 @@ void FileFetcher::onFileWriteReady() {
             this->file_write_thread_ptr, &QThread::deleteLater);
     connect(this->file_write_thread_ptr, &QThread::started, [this] {
         if (this->store_in_memory) {
-            QQueue<QByteArray> data_all = this->request.getReplyData();
-            while (data_all.size()) {
-                QByteArray data = data_all.constFirst();
-                data.detach();
-                data_all.pop_front();
+            while (this->request.hasNextPendingData()) {
+                QByteArray data = this->request.getReplyData();
                 if (data.size() > 0) {
                     this->file_data += data;
                 }
@@ -173,10 +170,8 @@ void FileFetcher::onFileWriteReady() {
         } else {
             QFile file(this->file_path);
             if (file.open(QIODevice::WriteOnly | QIODevice::Append)) {
-                QQueue<QByteArray> data_all = this->request.getReplyData();
-                while (data_all.size()) {
-                    QByteArray data = data_all.constFirst();
-                    data_all.pop_front();
+                while (this->request.hasNextPendingData()) {
+                    QByteArray data = this->request.getReplyData();
                     if (data.size() > 0) {
                         file.write(data);
                         file.flush();
@@ -223,39 +218,35 @@ void FileFetcher::onRequestTimeout() {
                     this->file_write_thread_ptr = new QThread();
                     connect(this->file_write_thread_ptr, &QThread::finished,
                             this->file_write_thread_ptr, &QThread::deleteLater);
-                    connect(this->file_write_thread_ptr, &QThread::started,
-                            [this] {
-                                if (this->store_in_memory) {
-                                    QQueue<QByteArray> data_all =
+                    connect(
+                        this->file_write_thread_ptr, &QThread::started, [this] {
+                            if (this->store_in_memory) {
+                                while (this->request.hasNextPendingData()) {
+                                    QByteArray data =
                                         this->request.getReplyData();
-                                    while (data_all.size()) {
-                                        QByteArray data = data_all.constFirst();
-                                        data_all.pop_front();
-                                        if (data.size() > 0) {
-                                            this->file_data += data;
-                                        }
-                                    }
-                                } else {
-                                    QFile file(this->file_path);
-                                    if (file.open(QIODevice::WriteOnly |
-                                                  QIODevice::Append)) {
-                                        QQueue<QByteArray> data_all =
-                                            this->request.getReplyData();
-                                        while (data_all.size()) {
-                                            QByteArray data = data_all.constFirst();
-                                            data_all.pop_front();
-                                            if (data.size() > 0) {
-                                                file.write(data);
-                                                file.flush();
-                                            }
-                                        }
-                                        file.close();
+                                    if (data.size() > 0) {
+                                        this->file_data += data;
                                     }
                                 }
-                                this->fetcher_status = Status::Finished;
-                                this->file_write_thread_ptr = nullptr;
-                                QThread::currentThread()->quit();
-                            });
+                            } else {
+                                QFile file(this->file_path);
+                                if (file.open(QIODevice::WriteOnly |
+                                              QIODevice::Append)) {
+                                    while (this->request.hasNextPendingData()) {
+                                        QByteArray data =
+                                            this->request.getReplyData();
+                                        if (data.size() > 0) {
+                                            file.write(data);
+                                            file.flush();
+                                        }
+                                    }
+                                    file.close();
+                                }
+                            }
+                            this->fetcher_status = Status::Finished;
+                            this->file_write_thread_ptr = nullptr;
+                            QThread::currentThread()->quit();
+                        });
                     this->file_write_thread_ptr->start();
 
                     return;
