@@ -133,9 +133,6 @@ void FileFetcher::abort() {
         this->fetcher_status = Status::Canceled;
         this->request.abort();
     }
-    if (this->file_write_thread_ptr != nullptr) {
-        this->file_write_thread_ptr = nullptr;
-    }
 }
 
 void FileFetcher::reset() {
@@ -151,49 +148,30 @@ void FileFetcher::reset() {
     this->lock.unlock();
 }
 
-void FileFetcher::onFileWriteReady() {
-    if (this->request.signalsBlocked()) {
-        return;
-    }
-    this->request.blockSignals(true);
-    this->file_write_thread_ptr = new QThread();
-    connect(this->file_write_thread_ptr, &QThread::finished,
-            this->file_write_thread_ptr, &QThread::deleteLater);
-    connect(this->file_write_thread_ptr, &QThread::started, [this] {
-        if (this->store_in_memory) {
-            while (this->request.hasNextPendingData()) {
-                QByteArray data = this->request.getReplyData();
-                if (data.size() > 0) {
-                    this->file_data += data;
-                }
-            }
-        } else {
-            QFile file(this->file_path);
-            if (file.open(QIODevice::WriteOnly | QIODevice::Append)) {
-                while (this->request.hasNextPendingData()) {
-                    QByteArray data = this->request.getReplyData();
-                    if (data.size() > 0) {
-                        file.write(data);
-                        file.flush();
-                    }
-                }
-                file.close();
-            }
+void FileFetcher::onFileWriteReady(QByteArray data, bool last) {
+    if (this->store_in_memory) {
+        if (data.size() > 0) {
+            this->file_data += data;
         }
-        this->file_write_thread_ptr = nullptr;
-        this->request.blockSignals(false);
-        QThread::currentThread()->quit();
-    });
-    this->file_write_thread_ptr->start();
+    } else {
+        QFile file(this->file_path);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Append)) {
+            if (data.size() > 0) {
+                file.write(data);
+                file.flush();
+            }
+            file.close();
+        }
+    }
+    if (last) {
+        this->fetcher_status = Status::Finished;
+    }
 }
 
 void FileFetcher::onRequestTimeout() {
     switch (this->request.getStatus()) {
         case Status::Finished:
             if (this->request.getFailed()) {
-                if (this->file_write_thread_ptr != nullptr) {
-                    this->file_write_thread_ptr = nullptr;
-                }
                 if (this->countdown &&
                     this->request_count < this->max_retries) {
                     this->request_count++;
@@ -211,46 +189,9 @@ void FileFetcher::onRequestTimeout() {
                     this->request.run();
                 }
             } else {
-                if (this->request.signalsBlocked()) {
-                    return;
-                } else {
-                    this->tick_timer->stop();
-                    this->file_write_thread_ptr = new QThread();
-                    connect(this->file_write_thread_ptr, &QThread::finished,
-                            this->file_write_thread_ptr, &QThread::deleteLater);
-                    connect(
-                        this->file_write_thread_ptr, &QThread::started, [this] {
-                            if (this->store_in_memory) {
-                                while (this->request.hasNextPendingData()) {
-                                    QByteArray data =
-                                        this->request.getReplyData();
-                                    if (data.size() > 0) {
-                                        this->file_data += data;
-                                    }
-                                }
-                            } else {
-                                QFile file(this->file_path);
-                                if (file.open(QIODevice::WriteOnly |
-                                              QIODevice::Append)) {
-                                    while (this->request.hasNextPendingData()) {
-                                        QByteArray data =
-                                            this->request.getReplyData();
-                                        if (data.size() > 0) {
-                                            file.write(data);
-                                            file.flush();
-                                        }
-                                    }
-                                    file.close();
-                                }
-                            }
-                            this->fetcher_status = Status::Finished;
-                            this->file_write_thread_ptr = nullptr;
-                            QThread::currentThread()->quit();
-                        });
-                    this->file_write_thread_ptr->start();
-
-                    return;
-                }
+                this->tick_timer->stop();
+                this->request.emitRemainingData(true);
+                return;
             }
             break;
         case Status::Canceled:
