@@ -1,7 +1,7 @@
 /*
  * file name:       Database.cpp
  * created at:      2024/01/18
- * last modified:   2024/01/20
+ * last modified:   2024/02/20
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -13,8 +13,10 @@ MySQLODBCController::MySQLODBCController() {
     this->database = QSqlDatabase::addDatabase("QODBC3");
 }
 
-MySQLODBCController::MySQLODBCController(QString host, quint16 port,
-                                         QString user, QString pass,
+MySQLODBCController::MySQLODBCController(QString host,
+                                         quint16 port,
+                                         QString user,
+                                         QString pass,
                                          QString default_schema,
                                          QString default_table)
     : selected_table(default_table) {
@@ -26,7 +28,9 @@ MySQLODBCController::MySQLODBCController(QString host, quint16 port,
     this->database.setDatabaseName(default_schema);
 }
 
-MySQLODBCController::~MySQLODBCController() { this->disconnect(); }
+MySQLODBCController::~MySQLODBCController() {
+    this->disconnect();
+}
 
 void MySQLODBCController::setHost(QString host, quint16 port) {
     this->database.setHostName(host);
@@ -56,13 +60,21 @@ QString MySQLODBCController::getLocation() {
                   : QString(".`%1`").arg(this->selected_table)));
 }
 
-bool MySQLODBCController::getConnected() { return this->database.isOpen(); }
+bool MySQLODBCController::getConnected() {
+    return this->database.isOpen();
+}
 
-void MySQLODBCController::connect() { this->database.open(); }
+void MySQLODBCController::connect() {
+    this->database.open();
+}
 
-void MySQLODBCController::disconnect() { this->database.close(); }
+void MySQLODBCController::disconnect() {
+    this->database.close();
+}
 
-bool MySQLODBCController::rollback() { return this->database.rollback(); }
+bool MySQLODBCController::rollback() {
+    return this->database.rollback();
+}
 
 QString MySQLODBCController::make_match_str(
     QList<QHash<QString, QVariant>> match_query) {
@@ -121,7 +133,8 @@ QPair<int, QList<QList<QVariant>>> MySQLODBCController::runsql(
 }
 
 QPair<int, QList<QList<QVariant>>> MySQLODBCController::select(
-    QList<QHash<QString, QVariant>> match_query, qint32 limit_start,
+    QList<QHash<QString, QVariant>> match_query,
+    qint32 limit_start,
     qint32 limit_size) {
     QString sql_cmd = QString("SELECT * FROM `%1`").arg(this->selected_table);
     sql_cmd += this->make_match_str(match_query);
@@ -130,8 +143,10 @@ QPair<int, QList<QList<QVariant>>> MySQLODBCController::select(
 }
 
 QPair<int, QList<QList<QVariant>>> MySQLODBCController::insert(
-    QList<QList<QVariant>> records, QList<QString> columns) {
-    if (records.empty()) return {0, QList<QList<QVariant>>()};
+    QList<QList<QVariant>> records,
+    QList<QString> columns) {
+    if (records.empty())
+        return {0, QList<QList<QVariant>>()};
     QString sql_cmd = QString("INSERT INTO `%1`").arg(this->selected_table);
     if (!columns.empty()) {
         sql_cmd += " (";
@@ -170,7 +185,9 @@ QPair<int, QList<QList<QVariant>>> MySQLODBCController::remove(
 
 QPair<int, QList<QList<QVariant>>> MySQLODBCController::modify(
     QList<QHash<QString, QVariant>> match_query,
-    QHash<QString, QVariant> new_value, qint32 limit_start, qint32 limit_size) {
+    QHash<QString, QVariant> new_value,
+    qint32 limit_start,
+    qint32 limit_size) {
     if (match_query.isEmpty() || new_value.isEmpty())
         return {0, QList<QList<QVariant>>()};
     QString sql_cmd = QString("UPDATE `%1` SET ").arg(this->selected_table);
@@ -190,11 +207,15 @@ QPair<int, QList<QList<QVariant>>> MySQLODBCController::modify(
 
 RedisController::RedisController() {}
 
-RedisController::RedisController(QString host, quint16 port, QString user,
+RedisController::RedisController(QString host,
+                                 quint16 port,
+                                 QString user,
                                  QString pass)
     : host(host), port(port), user(user), pass(pass) {}
 
-RedisController::~RedisController() { this->disconnect(); }
+RedisController::~RedisController() {
+    this->disconnect();
+}
 
 void RedisController::setHost(QString host, quint16 port) {
     this->host = host;
@@ -206,7 +227,9 @@ void RedisController::setAuth(QString user, QString pass) {
     this->pass = pass;
 }
 
-bool RedisController::getConnected() { return this->database != nullptr; }
+bool RedisController::getConnected() {
+    return this->database != nullptr;
+}
 
 void RedisController::connect() {
     if (this->database == nullptr) {
@@ -217,9 +240,9 @@ void RedisController::connect() {
             return;
         }
         if (!this->pass.isEmpty()) {
-            if (this->data_from_reply(this->runredis(
-                    QString("auth %1 %2").arg(this->user).arg(this->pass)))[0]
-                    .toString() != "OK") {
+            QList<QVariant> ret = this->data_from_reply(this->runredis(
+                QString("auth %1 %2").arg(this->user).arg(this->pass)));
+            if ((ret.size() ? ret[0].toString() != "OK" : true)) {
                 this->disconnect();
                 return;
             }
@@ -251,17 +274,26 @@ RedisReply RedisController::runredis(QString cmd) {
 }
 
 bool RedisController::ping() {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this->data_from_reply(this->runredis("ping"))[0].toString() ==
            "PONG";
 }
 
 QVariant RedisController::get(QString key) {
+    if (!this->getConnected()) {
+        return {};
+    }
     QList<QVariant> data =
         this->data_from_reply(this->runredis(QString("get %1").arg(key)));
     return data.size() == 0 ? QVariant() : data[0];
 }
 
 bool RedisController::set(QString key, QVariant value, qint64 expire) {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this->data_from_reply(this->runredis(
                QString("set %1 %2 %3")
                    .arg(key)
@@ -272,26 +304,41 @@ bool RedisController::set(QString key, QVariant value, qint64 expire) {
 }
 
 bool RedisController::select(quint16 db) {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this->data_from_reply(
                    this->runredis(QString("select %1").arg(db)))[0]
                .toString() == "OK";
 }
 
 qint64 RedisController::dbsize() {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this->data_from_reply(this->runredis(QString("dbsize")))[0].toInt();
 }
 
 bool RedisController::flushdb() {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this->data_from_reply(this->runredis(QString("flushdb")))[0]
                .toString() == "OK";
 }
 
 bool RedisController::flushall() {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this->data_from_reply(this->runredis(QString("flushall")))[0]
                .toString() == "OK";
 }
 
 QList<QString> RedisController::keys(QString match) {
+    if (!this->getConnected()) {
+        return {};
+    }
     QList<QVariant> data =
         this->data_from_reply(this->runredis(QString("keys %1").arg(match)));
     QList<QString> ret;
@@ -304,12 +351,18 @@ QList<QString> RedisController::keys(QString match) {
 }
 
 bool RedisController::exists(QString key) {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this
         ->data_from_reply(this->runredis(QString("exists %1").arg(key)))[0]
         .toInt();
 }
 
 quint64 RedisController::del(QList<QString> keys) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this
         ->data_from_reply(
             this->runredis(QString("del %1").arg(keys.join(' '))))[0]
@@ -317,12 +370,18 @@ quint64 RedisController::del(QList<QString> keys) {
 }
 
 bool RedisController::move(QString key, quint16 db) {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this->data_from_reply(
                    this->runredis(QString("move %1 %2").arg(key).arg(db)))[0]
                .toString() == "1";
 }
 
 RedisDataType RedisController::type(QString key) {
+    if (!this->getConnected()) {
+        return RedisDataType::Nil;
+    }
     QString data =
         this->data_from_reply(this->runredis(QString("type %1").arg(key)))[0]
             .toString();
@@ -331,35 +390,54 @@ RedisDataType RedisController::type(QString key) {
 }
 
 bool RedisController::expire(QString key, qint64 seconds) {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this->data_from_reply(this->runredis(
                QString("expire %1 %2").arg(key).arg(seconds)))[0]
                .toString() == "1";
 }
 
 bool RedisController::pexpire(QString key, qint64 seconds) {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this->data_from_reply(this->runredis(
                QString("pexpire %1 %2").arg(key).arg(seconds)))[0]
                .toString() == "1";
 }
 
 qint64 RedisController::ttl(QString key) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this->data_from_reply(this->runredis(QString("ttl %1").arg(key)))[0]
         .toInt();
 }
 
 qint64 RedisController::pttl(QString key) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this->data_from_reply(this->runredis(QString("pttl %1").arg(key)))[0]
         .toInt();
 }
 
 bool RedisController::persist(QString key) {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this
         ->data_from_reply(this->runredis(QString("persist %1").arg(key)))[0]
         .toInt();
 }
 
-QPair<qint64, QList<QString>> RedisController::scan(QString match, qint64 count,
+QPair<qint64, QList<QString>> RedisController::scan(QString match,
+                                                    qint64 count,
                                                     qint64 cursor) {
+    if (!this->getConnected()) {
+        return {};
+    }
     QList<QVariant> data = this->data_from_reply(this->runredis(
         QString("scan %1 %2 %3")
             .arg(cursor)
@@ -376,6 +454,9 @@ QPair<qint64, QList<QString>> RedisController::scan(QString match, qint64 count,
 }
 
 bool RedisController::setnx(QString key, QVariant value) {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this
         ->data_from_reply(this->runredis(
             QString("setnx %1 %2").arg(key).arg(value.toString())))[0]
@@ -383,12 +464,18 @@ bool RedisController::setnx(QString key, QVariant value) {
 }
 
 QVariant RedisController::getset(QString key, QVariant value) {
+    if (!this->getConnected()) {
+        return {};
+    }
     QList<QVariant> data = this->data_from_reply(
         this->runredis(QString("getset %1 %2").arg(key).arg(value.toString())));
     return (data.size() == 0 ? QVariant() : data[0]);
 }
 
 qint64 RedisController::append(QString key, QVariant value) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this
         ->data_from_reply(this->runredis(
             QString("append %1 %2").arg(key).arg(value.toString())))[0]
@@ -396,16 +483,25 @@ qint64 RedisController::append(QString key, QVariant value) {
 }
 
 qint64 RedisController::incr(QString key) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this->data_from_reply(this->runredis(QString("incr %1").arg(key)))[0]
         .toInt();
 }
 
 qint64 RedisController::decr(QString key) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this->data_from_reply(this->runredis(QString("decr %1").arg(key)))[0]
         .toInt();
 }
 
 qint64 RedisController::incrby(QString key, qint64 value) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this
         ->data_from_reply(
             this->runredis(QString("incrby %1 %2").arg(key).arg(value)))[0]
@@ -413,6 +509,9 @@ qint64 RedisController::incrby(QString key, qint64 value) {
 }
 
 qint64 RedisController::decrby(QString key, qint64 value) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this
         ->data_from_reply(
             this->runredis(QString("decrby %1 %2").arg(key).arg(value)))[0]
@@ -420,6 +519,9 @@ qint64 RedisController::decrby(QString key, qint64 value) {
 }
 
 float RedisController::incrbyfloat(QString key, float value) {
+    if (!this->getConnected()) {
+        return 0.0f;
+    }
     return this
         ->data_from_reply(
             this->runredis(QString("incrbyfloat %1 %2").arg(key).arg(value)))[0]
@@ -427,12 +529,18 @@ float RedisController::incrbyfloat(QString key, float value) {
 }
 
 qint64 RedisController::strlen(QString key) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this
         ->data_from_reply(this->runredis(QString("strlen %1").arg(key)))[0]
         .toInt();
 }
 
 QString RedisController::getrange(QString key, qint64 start, qint64 end) {
+    if (!this->getConnected()) {
+        return "";
+    }
     return this
         ->data_from_reply(this->runredis(
             QString("getrange %1 %2 %3").arg(key).arg(start).arg(end)))[0]
@@ -440,6 +548,9 @@ QString RedisController::getrange(QString key, qint64 start, qint64 end) {
 }
 
 qint64 RedisController::setrange(QString key, qint64 offset, QString value) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this
         ->data_from_reply(this->runredis(
             QString("setrange %1 %2 %3").arg(key).arg(offset).arg(value)))[0]
@@ -447,6 +558,9 @@ qint64 RedisController::setrange(QString key, qint64 offset, QString value) {
 }
 
 bool RedisController::hset(QString key, QString hkey, QVariant hvalue) {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this
         ->data_from_reply(this->runredis(QString("hset %1 %2 %3")
                                              .arg(key)
@@ -456,6 +570,9 @@ bool RedisController::hset(QString key, QString hkey, QVariant hvalue) {
 }
 
 bool RedisController::hmset(QString key, QHash<QString, QVariant> data) {
+    if (!this->getConnected()) {
+        return false;
+    }
     QString cmd = QString("hmset %1").arg(key);
     for (QHash<QString, QVariant>::iterator it = data.begin(); it != data.end();
          ++it) {
@@ -465,11 +582,17 @@ bool RedisController::hmset(QString key, QHash<QString, QVariant> data) {
 }
 
 QVariant RedisController::hget(QString key, QString hkey) {
+    if (!this->getConnected()) {
+        return {};
+    }
     return this->data_from_reply(
         this->runredis(QString("hget %1 %2").arg(key).arg(hkey)))[0];
 }
 
 QList<QVariant> RedisController::hmget(QString key, QList<QString> hkeys) {
+    if (!this->getConnected()) {
+        return {};
+    }
     QList<QVariant> data = this->data_from_reply(
         this->runredis(QString("hmget %1 %2").arg(key).arg(hkeys.join(' '))));
     QList<QVariant> ret;
@@ -482,6 +605,9 @@ QList<QVariant> RedisController::hmget(QString key, QList<QString> hkeys) {
 }
 
 QHash<QString, QVariant> RedisController::hgetall(QString key) {
+    if (!this->getConnected()) {
+        return {};
+    }
     QList<QVariant> data =
         this->data_from_reply(this->runredis(QString("hgetall %1").arg(key)));
     QHash<QString, QVariant> ret;
@@ -492,6 +618,9 @@ QHash<QString, QVariant> RedisController::hgetall(QString key) {
 }
 
 qint64 RedisController::lpush(QString key, QList<QVariant> values) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     QString cmd = QString("lpush %1").arg(key);
     for (QVariant& item : values) {
         cmd += QString(" %1").arg(item.toString());
@@ -500,6 +629,9 @@ qint64 RedisController::lpush(QString key, QList<QVariant> values) {
 }
 
 qint64 RedisController::rpush(QString key, QList<QVariant> values) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     QString cmd = QString("rpush %1").arg(key);
     for (QVariant& item : values) {
         cmd += QString(" %1").arg(item.toString());
@@ -508,16 +640,25 @@ qint64 RedisController::rpush(QString key, QList<QVariant> values) {
 }
 
 qint64 RedisController::llen(QString key) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this->data_from_reply(this->runredis(QString("llen %1").arg(key)))[0]
         .toInt();
 }
 
 QVariant RedisController::lindex(QString key, qint64 index) {
+    if (!this->getConnected()) {
+        return {};
+    }
     return this->data_from_reply(
         this->runredis(QString("lindex %1 %2").arg(key).arg(index)))[0];
 }
 
 bool RedisController::lset(QString key, qint64 index, QVariant value) {
+    if (!this->getConnected()) {
+        return false;
+    }
     return this->data_from_reply(this->runredis(QString("lset %1 %2 %3")
                                                     .arg(key)
                                                     .arg(index)
@@ -526,6 +667,9 @@ bool RedisController::lset(QString key, qint64 index, QVariant value) {
 }
 
 QList<QVariant> RedisController::lrange(QString key, qint64 start, qint64 end) {
+    if (!this->getConnected()) {
+        return {};
+    }
     QList<QVariant> data = this->data_from_reply(this->runredis(
         QString("lrange %1 %2 %3").arg(key).arg(start).arg(end)));
     QList<QVariant> ret;
@@ -538,6 +682,9 @@ QList<QVariant> RedisController::lrange(QString key, qint64 start, qint64 end) {
 }
 
 QList<QVariant> RedisController::lpop(QString key, qint64 count) {
+    if (!this->getConnected()) {
+        return {};
+    }
     QList<QVariant> data = this->data_from_reply(
         this->runredis(QString("lpop %1 %2").arg(key).arg(count)));
     QList<QVariant> ret;
@@ -550,6 +697,9 @@ QList<QVariant> RedisController::lpop(QString key, qint64 count) {
 }
 
 QList<QVariant> RedisController::rpop(QString key, qint64 count) {
+    if (!this->getConnected()) {
+        return {};
+    }
     QList<QVariant> data = this->data_from_reply(
         this->runredis(QString("rpop %1 %2").arg(key).arg(count)));
     QList<QVariant> ret;
@@ -561,8 +711,12 @@ QList<QVariant> RedisController::rpop(QString key, qint64 count) {
     return ret;
 }
 
-QString RedisController::xadd(QString stream, QHash<QString, QVariant> data,
+QString RedisController::xadd(QString stream,
+                              QHash<QString, QVariant> data,
                               QString key) {
+    if (!this->getConnected()) {
+        return "";
+    }
     QString cmd = QString("xadd %1 %2").arg(stream).arg(key);
     for (QHash<QString, QVariant>::iterator it = data.begin(); it != data.end();
          ++it) {
@@ -571,8 +725,11 @@ QString RedisController::xadd(QString stream, QHash<QString, QVariant> data,
     return this->data_from_reply(this->runredis(cmd))[0].toString();
 }
 
-QList<QPair<QString, QHash<QString, QVariant>>> RedisController::xread(
-    QString stream, qint64 block, qint64 count) {
+QList<QPair<QString, QHash<QString, QVariant>>>
+RedisController::xread(QString stream, qint64 block, qint64 count) {
+    if (!this->getConnected()) {
+        return {};
+    }
     QList<QVariant> data = this->data_from_reply(
         this->runredis(QString("xread %1 %2 %3 0")
                            .arg(count > 0 ? QString("count %1").arg(count) : "")
@@ -595,8 +752,11 @@ QList<QPair<QString, QHash<QString, QVariant>>> RedisController::xread(
     return ret;
 }
 
-QList<QPair<QString, QHash<QString, QVariant>>> RedisController::xrange(
-    QString key, QString start, QString end) {
+QList<QPair<QString, QHash<QString, QVariant>>>
+RedisController::xrange(QString key, QString start, QString end) {
+    if (!this->getConnected()) {
+        return {};
+    }
     QList<QVariant> data = this->data_from_reply(this->runredis(
         QString("xrange %1 %2 %3").arg(key).arg(start).arg(end)));
     QList<QPair<QString, QHash<QString, QVariant>>> ret;
@@ -616,6 +776,9 @@ QList<QPair<QString, QHash<QString, QVariant>>> RedisController::xrange(
 }
 
 qint64 RedisController::xdel(QString key, QList<QString> ids) {
+    if (!this->getConnected()) {
+        return 0;
+    }
     return this
         ->data_from_reply(this->runredis(
             QString("xdel %1 %2").arg(key).arg(ids.join(' '))))[0]
@@ -623,6 +786,9 @@ qint64 RedisController::xdel(QString key, QList<QString> ids) {
 }
 
 QList<QVariant> RedisController::data_from_reply(RedisReply& reply) {
+    if (!this->getConnected()) {
+        return {};
+    }
     QList<QVariant> data = reply.getData();
     reply.dispose();
     return data;
