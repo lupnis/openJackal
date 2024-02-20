@@ -105,7 +105,8 @@ class RequestMeta : public QObject {
     Result getResult() const;
     qint64 getBufferSize() const;
     QPair<quint64, quint64> getProgress() const;
-    QQueue<QByteArray> getReplyData() const;
+    bool hasNextPendingData() const;
+    QByteArray getReplyData() const;
     QHash<QString, QString> getHeaderDict() const;
     bool getFinished() const;
     bool getFailed() const;
