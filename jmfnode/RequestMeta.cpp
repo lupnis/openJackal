@@ -39,8 +39,10 @@ QPair<quint64, quint64> RequestMeta::getProgress() const {
     return {this->received, this->total};
 }
 
-QByteArray RequestMeta::getReplyData() const {
-    return this->reply->readAll();
+void RequestMeta::emitRemainingData(bool last) {
+    if(this->reply != nullptr) {
+        emit this->readyRead(this->reply->readAll(), last);
+    }
 }
 
 QHash<QString, QString> RequestMeta::getHeaderDict() const {
@@ -155,7 +157,6 @@ void RequestMeta::reset() {
         this->reply->deleteLater();
         this->reply = nullptr;
     }
-    this->received_queue.clear();
     this->network_request = QNetworkRequest();
     this->method = Method::GET;
     this->url.clear();
@@ -196,7 +197,7 @@ void RequestMeta::onReadyRead() {
             .toInt();
     if (this->reply->error() == QNetworkReply::NoError && status_code >= 200 &&
         status_code < 300) {
-        emit this->readyRead();
+        emit this->readyRead(this->reply->readAll());
     }
 }
 void RequestMeta::onReplyFinished(QNetworkReply*) {
@@ -210,7 +211,7 @@ void RequestMeta::onReplyFinished(QNetworkReply*) {
         status_code < 300) {
         this->status = Status::Finished;
         this->result = Result::Succeeded;
-        emit this->readyRead();
+        emit this->readyRead(this->reply->readAll());
     } else if (this->reply->error() == QNetworkReply::NoError &&
                this->reply->rawHeader("Location").size()) {
         this->url = QString::fromUtf8(this->reply->rawHeader("Location"));
