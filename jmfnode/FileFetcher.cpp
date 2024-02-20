@@ -163,7 +163,8 @@ void FileFetcher::onFileWriteReady() {
         if (this->store_in_memory) {
             QQueue<QByteArray> data_all = this->request.getReplyData();
             while (data_all.size()) {
-                QByteArray data = data_all.first();
+                QByteArray data = data_all.constFirst();
+                data.detach();
                 data_all.pop_front();
                 if (data.size() > 0) {
                     this->file_data += data;
@@ -174,7 +175,7 @@ void FileFetcher::onFileWriteReady() {
             if (file.open(QIODevice::WriteOnly | QIODevice::Append)) {
                 QQueue<QByteArray> data_all = this->request.getReplyData();
                 while (data_all.size()) {
-                    QByteArray data = data_all.first();
+                    QByteArray data = data_all.constFirst();
                     data_all.pop_front();
                     if (data.size() > 0) {
                         file.write(data);
@@ -228,7 +229,7 @@ void FileFetcher::onRequestTimeout() {
                                     QQueue<QByteArray> data_all =
                                         this->request.getReplyData();
                                     while (data_all.size()) {
-                                        QByteArray data = data_all.first();
+                                        QByteArray data = data_all.constFirst();
                                         data_all.pop_front();
                                         if (data.size() > 0) {
                                             this->file_data += data;
@@ -241,7 +242,7 @@ void FileFetcher::onRequestTimeout() {
                                         QQueue<QByteArray> data_all =
                                             this->request.getReplyData();
                                         while (data_all.size()) {
-                                            QByteArray data = data_all.first();
+                                            QByteArray data = data_all.constFirst();
                                             data_all.pop_front();
                                             if (data.size() > 0) {
                                                 file.write(data);
