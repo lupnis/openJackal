@@ -104,8 +104,8 @@ class RequestMeta : public QObject {
     Status getStatus() const;
     Result getResult() const;
     qint64 getBufferSize() const;
+    void emitRemainingData(bool last = false);
     QPair<quint64, quint64> getProgress() const;
-    QByteArray getReplyData() const;
     QHash<QString, QString> getHeaderDict() const;
     bool getFinished() const;
     bool getFailed() const;
@@ -129,7 +129,7 @@ class RequestMeta : public QObject {
     void auto_mode_select();
 
    signals:
-    void readyRead();
+    void readyRead(QByteArray data, bool last = false);
 
    private slots:
     void onReadyRead();
