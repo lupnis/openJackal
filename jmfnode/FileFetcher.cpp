@@ -171,6 +171,7 @@ void FileFetcher::onFileWriteReady() {
                 file.close();
             }
         }
+        this->file_write_thread_ptr = nullptr;
         this->request.blockSignals(false);
         QThread::currentThread()->quit();
     });
@@ -182,7 +183,6 @@ void FileFetcher::onRequestTimeout() {
         case Status::Finished:
             if (this->request.getFailed()) {
                 if (this->file_write_thread_ptr != nullptr) {
-                    this->file_write_thread_ptr->terminate();
                     this->file_write_thread_ptr = nullptr;
                 }
                 if (this->countdown &&
@@ -229,6 +229,7 @@ void FileFetcher::onRequestTimeout() {
                                 }
                             }
                             this->fetcher_status = Status::Finished;
+                            this->file_write_thread_ptr = nullptr;
                             QThread::currentThread()->quit();
                         });
                     this->file_write_thread_ptr->start();
