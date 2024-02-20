@@ -1,7 +1,7 @@
 /*
  * file name:       RequestMeta.h
  * created at:      2024/01/18
- * last modified:   2024/02/10
+ * last modified:   2024/02/21
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -105,9 +105,8 @@ class RequestMeta : public QObject {
     Result getResult() const;
     qint64 getBufferSize() const;
     QPair<quint64, quint64> getProgress() const;
-    QByteArray getReplyData() const;
+    QQueue<QByteArray> getReplyData() const;
     QHash<QString, QString> getHeaderDict() const;
-    bool hasNextPendingReply() const;
     bool getFinished() const;
     bool getFailed() const;
     QPair<QString, QHash<QString, QString>> getTask() const;
