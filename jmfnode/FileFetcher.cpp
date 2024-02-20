@@ -1,7 +1,7 @@
 /*
  * file name:       FileFetcher.cpp
  * created at:      2024/01/29
- * last modified:   2024/02/20
+ * last modified:   2024/02/21
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -134,7 +134,7 @@ void FileFetcher::abort() {
         this->request.abort();
     }
     if (this->file_write_thread_ptr != nullptr) {
-         this->file_write_thread_ptr = nullptr;
+        this->file_write_thread_ptr = nullptr;
     }
 }
 
@@ -152,21 +152,34 @@ void FileFetcher::reset() {
 }
 
 void FileFetcher::onFileWriteReady() {
+    if (this->request.signalsBlocked()) {
+        return;
+    }
     this->request.blockSignals(true);
     this->file_write_thread_ptr = new QThread();
     connect(this->file_write_thread_ptr, &QThread::finished,
             this->file_write_thread_ptr, &QThread::deleteLater);
     connect(this->file_write_thread_ptr, &QThread::started, [this] {
         if (this->store_in_memory) {
-            while (this->request.hasNextPendingReply()) {
-                this->file_data += this->request.getReplyData();
+            QQueue<QByteArray> data_all = this->request.getReplyData();
+            while (data_all.size()) {
+                QByteArray data = data_all.first();
+                data_all.pop_front();
+                if (data.size() > 0) {
+                    this->file_data += data;
+                }
             }
         } else {
             QFile file(this->file_path);
             if (file.open(QIODevice::WriteOnly | QIODevice::Append)) {
-                while (this->request.hasNextPendingReply()) {
-                    file.write(this->request.getReplyData());
-                    file.flush();
+                QQueue<QByteArray> data_all = this->request.getReplyData();
+                while (data_all.size()) {
+                    QByteArray data = data_all.first();
+                    data_all.pop_front();
+                    if (data.size() > 0) {
+                        file.write(data);
+                        file.flush();
+                    }
                 }
                 file.close();
             }
@@ -202,38 +215,48 @@ void FileFetcher::onRequestTimeout() {
                     this->request.run();
                 }
             } else {
-                if (this->file_write_thread_ptr != nullptr) {
+                if (this->request.signalsBlocked()) {
                     return;
                 } else {
+                    this->tick_timer->stop();
                     this->file_write_thread_ptr = new QThread();
                     connect(this->file_write_thread_ptr, &QThread::finished,
                             this->file_write_thread_ptr, &QThread::deleteLater);
-                    connect(
-                        this->file_write_thread_ptr, &QThread::started, [this] {
-                            if (this->store_in_memory) {
-                                while (this->request.hasNextPendingReply()) {
-                                    this->file_data +=
+                    connect(this->file_write_thread_ptr, &QThread::started,
+                            [this] {
+                                if (this->store_in_memory) {
+                                    QQueue<QByteArray> data_all =
                                         this->request.getReplyData();
-                                }
-                            } else {
-                                QFile file(this->file_path);
-                                if (file.open(QIODevice::WriteOnly |
-                                              QIODevice::Append)) {
-                                    while (
-                                        this->request.hasNextPendingReply()) {
-                                        file.write(
-                                            this->request.getReplyData());
-                                        file.flush();
+                                    while (data_all.size()) {
+                                        QByteArray data = data_all.first();
+                                        data_all.pop_front();
+                                        if (data.size() > 0) {
+                                            this->file_data += data;
+                                        }
                                     }
-                                    file.close();
+                                } else {
+                                    QFile file(this->file_path);
+                                    if (file.open(QIODevice::WriteOnly |
+                                                  QIODevice::Append)) {
+                                        QQueue<QByteArray> data_all =
+                                            this->request.getReplyData();
+                                        while (data_all.size()) {
+                                            QByteArray data = data_all.first();
+                                            data_all.pop_front();
+                                            if (data.size() > 0) {
+                                                file.write(data);
+                                                file.flush();
+                                            }
+                                        }
+                                        file.close();
+                                    }
                                 }
-                            }
-                            this->fetcher_status = Status::Finished;
-                            this->file_write_thread_ptr = nullptr;
-                            QThread::currentThread()->quit();
-                        });
+                                this->fetcher_status = Status::Finished;
+                                this->file_write_thread_ptr = nullptr;
+                                QThread::currentThread()->quit();
+                            });
                     this->file_write_thread_ptr->start();
-                    this->tick_timer->stop();
+
                     return;
                 }
             }
