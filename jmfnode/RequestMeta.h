@@ -105,7 +105,6 @@ class RequestMeta : public QObject {
     Result getResult() const;
     qint64 getBufferSize() const;
     QPair<quint64, quint64> getProgress() const;
-    bool hasNextPendingData() const;
     QByteArray getReplyData() const;
     QHash<QString, QString> getHeaderDict() const;
     bool getFinished() const;
@@ -152,7 +151,6 @@ class RequestMeta : public QObject {
     QString url;
     QHash<QString, QString> headers = EMPTY_DICT;
     qint64 buffer_size;
-    mutable QQueue<QByteArray> received_queue;
 
     QNetworkReply* reply = nullptr;
     QMutex lock;
