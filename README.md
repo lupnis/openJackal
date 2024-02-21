@@ -7,4 +7,4 @@ finished:
 
 | name | path | description |
 |------|------|-------------|
-|jmfnode|./jmfnode|jackal mirrors fetching node|
+|jmfnode|./src/jmfnode|jackal mirrors fetching node|
