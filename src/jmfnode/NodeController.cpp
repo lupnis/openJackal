@@ -362,7 +362,7 @@ void NodeController::action_report() {
              "current_task_dest", "use_proxy", "fetchers_count", "runner_stage",
              "progresses", "time_consumed", "fetcher_status", "request_status",
              "request_result"},
-            {QString("'%1'").arg(this->node_id), i,
+            {QString("'%1_%2'").arg(this->node_id).arg(i),
              (quint8)runners_running_status[i],
              QString("'%1'").arg(QString::fromUtf8(
                  QJsonDocument::fromVariant(task_main_queue_list).toJson())),
@@ -420,7 +420,7 @@ void NodeController::action_report() {
                                        QString("'%1'").arg(task.mirrorName),
                                        QString("'%1'").arg(task.storagePath)});
     }
-    
+
     this->logger.info("reports uploaded.", JLogs::Tag::SUCCEEDED);
 }
 
