@@ -32,9 +32,9 @@ qrc_*.cpp
 Thumbs.db
 *.res
 *.rc
-/.qmake.cache
-/.qmake.stash
-/.qtc_clangd
+*.qmake.cache
+*.qmake.stash
+*.qtc_clangd
 
 # qtcreator generated files
 *.pro.user*
