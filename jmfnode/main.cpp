@@ -1,7 +1,7 @@
 /*
  * file name:       main.cpp
  * created at:      2024/01/19
- * last modified:   2024/02/20
+ * last modified:   2024/02/21
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
     if(argc > 1 && QFile(argv[1]).exists()) {
         config_handler.setFilePath(argv[1]);
     } else {
-        qDebug() << "no config file found, load default config file: node_properties.json...";
+        std::cout << "no config file found, load default config file: node_properties.json..." << std::endl;
     }
     JackalMFN::NodeController controller(config_handler);
     controller.startNode();
