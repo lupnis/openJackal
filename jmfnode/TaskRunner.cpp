@@ -1,7 +1,7 @@
 /*
  * file name:       TaskRunner.cpp
  * created at:      2024/02/01
- * last modified:   2024/02/18
+ * last modified:   2024/02/21
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -121,6 +121,9 @@ QList<TaskDetails> TaskRunner::getLoopQueue() const {
 QList<TaskDetails> TaskRunner::getFinishedTasks() const {
     return this->finished_list;
 }
+QList<TaskDetails> TaskRunner::getFailedTasks() const {
+    return this->failed_list;
+}
 TaskDetails TaskRunner::getTaskDetails(QString mirror_name,
                                        QString url_path) const {
     for (const TaskDetails& task : this->main_queue) {
@@ -164,6 +167,9 @@ void TaskRunner::dropAllQueues() {
 }
 void TaskRunner::dropFinishedTaskRecords() {
     this->finished_list.clear();
+}
+void TaskRunner::dropFailedTaskRecords() {
+    this->failed_list.clear();
 }
 void TaskRunner::swapQueues() {
     this->main_queue.swap(this->loop_queue);
@@ -307,13 +313,10 @@ void TaskRunner::stopRunnerLoop() {
         this->fetchers[i] = nullptr;
     }
     this->fetchers.clear();
-    /* sometimes program crashes because of this
-     * if (this->stage_thread_ptr != nullptr) {
-        this->stage_thread_ptr->quit();//exit(0);//terminate();//wait();
-        ^^^^^^^^ error occurs here
-        this->stage_thread_ptr->deleteLater();
+    if (this->stage_thread_ptr != nullptr) {
+        this->stage_thread_ptr->quit();
         this->stage_thread_ptr = nullptr;
-    }*/
+    }
     this->lock.tryLock();
     this->lock.unlock();
     this->runner_running = false;
@@ -327,8 +330,12 @@ void TaskRunner::terminateRunnerLoop() {
 
 void TaskRunner::onErrorsEmitted() {
     this->current_running_task.failedCount++;
-    this->dropCurrentRunningTask(this->current_running_task.failedCount <=
-                                 this->task_max_retries);
+    if (this->current_running_task.failedCount <= this->task_max_retries) {
+        this->dropCurrentRunningTask(true);
+    } else {
+        this->failed_list.push_back(this->current_running_task);
+        this->dropCurrentRunningTask();
+    }
 }
 
 void TaskRunner::on_stage_init() {
@@ -474,6 +481,7 @@ void TaskRunner::on_stage_merging() {
             }
         }
         this->current_running_task.currentStage = TaskStage::CleaningCache;
+        this->stage_thread_ptr = nullptr;
         QThread::currentThread()->quit();
     });
     this->stage_thread_ptr->start();
@@ -492,6 +500,7 @@ void TaskRunner::on_stage_cleaning() {
             this->fetchers[i]->reset();
         }
         this->current_running_task.currentStage = TaskStage::TaskFinished;
+        this->stage_thread_ptr = nullptr;
         QThread::currentThread()->quit();
     });
     this->stage_thread_ptr->start();
