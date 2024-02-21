@@ -1,7 +1,7 @@
 /*
  * file name:       Database.h
  * created at:      2024/01/18
- * last modified:   2024/01/20
+ * last modified:   2024/01/21
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -20,8 +20,12 @@ class MySQLODBCController : public QObject {
     Q_OBJECT
    public:
     MySQLODBCController();
-    MySQLODBCController(QString host, quint16 port, QString user, QString pass,
-                        QString default_schema, QString default_table = "");
+    MySQLODBCController(QString host,
+                        quint16 port,
+                        QString user,
+                        QString pass,
+                        QString default_schema,
+                        QString default_table = "");
     ~MySQLODBCController();
     void setHost(QString host, quint16 port = 3306);
     void setAuth(QString user, QString pass);
@@ -36,8 +40,12 @@ class MySQLODBCController : public QObject {
     QPair<int, QList<QList<QVariant>>> select(
         QList<QHash<QString, QVariant>> match_query =
             QList<QHash<QString, QVariant>>(),
-        qint32 limit_start = 0, qint32 limit_size = 1000);
+        qint32 limit_start = 0,
+        qint32 limit_size = 1000);
     QPair<int, QList<QList<QVariant>>> insert(
+        QList<QList<QVariant>> records,
+        QList<QString> columns = QList<QString>());
+    QPair<int, QList<QList<QVariant>>> upsert(
         QList<QList<QVariant>> records,
         QList<QString> columns = QList<QString>());
     QPair<int, QList<QList<QVariant>>> remove(
@@ -47,7 +55,8 @@ class MySQLODBCController : public QObject {
         QList<QHash<QString, QVariant>> match_query =
             QList<QHash<QString, QVariant>>(),
         QHash<QString, QVariant> new_value = QHash<QString, QVariant>(),
-        qint32 limit_start = 0, qint32 limit_size = 1000);
+        qint32 limit_start = 0,
+        qint32 limit_size = 1000);
 
    private:
     QString make_match_str(QList<QHash<QString, QVariant>> match_query =
@@ -143,7 +152,9 @@ struct RedisReply {
 class RedisController {
    public:
     RedisController();
-    RedisController(QString host, quint16 port = 6379, QString user = "",
+    RedisController(QString host,
+                    quint16 port = 6379,
+                    QString user = "",
                     QString pass = "");
     ~RedisController();
 
@@ -173,7 +184,8 @@ class RedisController {
     qint64 ttl(QString key);
     qint64 pttl(QString key);
     bool persist(QString key);
-    QPair<qint64, QList<QString>> scan(QString match = "", qint64 count = -1,
+    QPair<qint64, QList<QString>> scan(QString match = "",
+                                       qint64 count = -1,
                                        qint64 cursor = 0);
     bool setnx(QString key, QVariant value);
     QVariant getset(QString key, QVariant value);
@@ -200,7 +212,8 @@ class RedisController {
     QList<QVariant> lrange(QString key, qint64 start, qint64 end);
     QList<QVariant> lpop(QString key, qint64 count);
     QList<QVariant> rpop(QString key, qint64 count);
-    QString xadd(QString stream, QHash<QString, QVariant> data,
+    QString xadd(QString stream,
+                 QHash<QString, QVariant> data,
                  QString key = "*");
     QList<QPair<QString, QHash<QString, QVariant>>> xread(QString stream,
                                                           qint64 block = -1,
