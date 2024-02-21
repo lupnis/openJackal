@@ -47,7 +47,7 @@ QPair<quint64, quint64> FileFetcher::getProgress() const {
     return this->request.getProgress();
 }
 bool FileFetcher::getFinished() const {
-    return this->fetcher_status == Status::Finished;
+    return this->fetcher_status == Status::Finished || this->fetcher_status == Status::Canceled;
 }
 bool FileFetcher::getFailed() const {
     return this->fetcher_status == Status::Canceled ||
