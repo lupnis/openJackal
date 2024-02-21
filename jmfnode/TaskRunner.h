@@ -9,6 +9,7 @@
 #define TASK_RUNNER_H
 
 #include <QCryptographicHash>
+#include <QJsonObject>
 #include <QObject>
 #include <QTextStream>
 
