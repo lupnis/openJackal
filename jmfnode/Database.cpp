@@ -1,7 +1,7 @@
 /*
  * file name:       Database.cpp
  * created at:      2024/01/18
- * last modified:   2024/02/20
+ * last modified:   2024/02/21
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -172,6 +172,38 @@ QPair<int, QList<QList<QVariant>>> MySQLODBCController::insert(
                 records[i][j].toString().replace("\'", "\\'"));
         }
         sql_cmd += ")";
+    }
+    return this->runsql(sql_cmd);
+}
+
+QPair<int, QList<QList<QVariant>>> MySQLODBCController::upsert(
+    QList<QVariant> record,
+    QList<QString> columns,
+    QList<QVariant> record_on_duplicate) {
+    QString sql_cmd = QString("INSERT INTO `%1`").arg(this->selected_table);
+    sql_cmd += " (";
+    for (int i = 0; i < columns.size(); ++i) {
+        if (i) {
+            sql_cmd += ", ";
+        }
+        sql_cmd += QString("`%1`").arg(columns[i]);
+    }
+    sql_cmd += ") VALUES (";
+    for (int i = 0; i < record.size(); ++i) {
+        if (i) {
+            sql_cmd += ", ";
+        }
+        sql_cmd += QString("%1").arg(record[i].toString().replace("\'", "\\'"));
+    }
+    sql_cmd += ") on duplicate key update ";
+    for (int i = 0; i < record_on_duplicate.size(); ++i) {
+        if (i) {
+            sql_cmd += ", ";
+        }
+        sql_cmd +=
+            QString("`%1`=%2")
+                .arg(columns[i])
+                .arg(record_on_duplicate[i].toString().replace("\'", "\\'"));
     }
     return this->runsql(sql_cmd);
 }
