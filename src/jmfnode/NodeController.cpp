@@ -322,7 +322,7 @@ void NodeController::action_report() {
             task_loop_queue_list.push_back((QJsonObject)task);
         }
         this->mysql_controller.upsert(
-            {QString("'%1'").arg(this->node_id), i,
+            {QString("'%1_%2'").arg(this->node_id).arg(i),
              (quint8)runners_running_status[i],
              QString("'%1'").arg(QString::fromUtf8(
                  QJsonDocument::fromVariant(task_main_queue_list).toJson())),
@@ -357,7 +357,7 @@ void NodeController::action_report() {
                  QJsonDocument::fromVariant(
                      QVariant::fromValue(current_request_result[i]).toList())
                      .toJson()))},
-            {"node_id", "runner_id", "runner_running", "tasks_main_queue",
+            {"node_runner_id", "runner_running", "tasks_main_queue",
              "tasks_loop_queue", "current_mirror_name", "current_task_url",
              "current_task_dest", "use_proxy", "fetchers_count", "runner_stage",
              "progresses", "time_consumed", "fetcher_status", "request_status",

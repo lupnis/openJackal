@@ -21,9 +21,7 @@ create table if not exists
 -- drop table if exists `schema_open_jackal`.`table_jmfn_runners_reports`;
 create table if not exists
     `schema_open_jackal`.`table_jmfn_runners_reports` (
-        `id` bigint not null AUTO_INCREMENT,
-        `node_id` varchar(40) not null,
-        `runner_id` tinyint not null,
+        `node_runner_id` varchar(64) not null,
         `runner_running` tinyint not null,
         `tasks_main_queue` json null,
         `tasks_loop_queue` json null,
@@ -40,7 +38,7 @@ create table if not exists
         `request_result` json null,
         `last_reported` datetime null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
         `created_at` datetime null default CURRENT_TIMESTAMP,
-        primary key (`id`)
+        primary key (`node_runner_id`)
     );
 -- drop table if exists `schema_open_jackal`.`table_jmfn_finished_tasks`;
 create table if not exists
@@ -49,7 +47,6 @@ create table if not exists
         `node_id` varchar(40) not null,
         `mirror_name` varchar(128) null,
         `task_path` text null,
-        `last_reported` datetime null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
         `created_at` datetime null default CURRENT_TIMESTAMP,
         primary key (`id`)
     );
@@ -60,7 +57,6 @@ create table if not exists
         `node_id` varchar(40) not null,
         `mirror_name` varchar(128) null,
         `task_path` text null,
-        `last_reported` datetime null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
         `created_at` datetime null default CURRENT_TIMESTAMP,
         primary key (`id`)
     );
