@@ -1,7 +1,7 @@
 /*
  * file name:       HeaderFetcher.cpp
  * created at:      2024/01/20
- * last modified:   2024/02/17
+ * last modified:   2024/02/21
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -37,7 +37,7 @@ Status HeaderFetcher::getFetcherStatus() const {
     return this->fetcher_status;
 }
 bool HeaderFetcher::getFinished() const {
-    return this->fetcher_status == Status::Finished;
+    return this->fetcher_status == Status::Finished || this->fetcher_status == Status::Canceled;
 }
 Result HeaderFetcher::getResult() const {
     return this->request.getResult();
