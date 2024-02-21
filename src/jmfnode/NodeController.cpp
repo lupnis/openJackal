@@ -420,6 +420,7 @@ void NodeController::action_report() {
                                        QString("'%1'").arg(task.mirrorName),
                                        QString("'%1'").arg(task.storagePath)});
     }
+    
     this->logger.info("reports uploaded.", JLogs::Tag::SUCCEEDED);
 }
 

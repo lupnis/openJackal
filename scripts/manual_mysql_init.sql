@@ -69,4 +69,5 @@ grant select, insert, update on `schema_open_jackal`.`table_jmfn_node_reports` t
 grant select, insert, update on `schema_open_jackal`.`table_jmfn_runners_reports` to 'u_jackalmfn' @'localhost';
 grant select, insert, update on `schema_open_jackal`.`table_jmfn_finished_tasks` to 'u_jackalmfn'@'localhost';
 grant select, insert, update on `schema_open_jackal`.`table_jmfn_failed_tasks` to 'u_jackalmfn'@'localhost';
+
 flush privileges;
