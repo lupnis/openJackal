@@ -1,0 +1,3 @@
+[submodule "src/3rdparty/hiredis"]
+	path = src/3rdparty/hiredis
+	url = https://github.com/redis/hiredis
