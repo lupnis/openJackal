@@ -45,7 +45,7 @@ class MySQLODBCController : public QObject {
     QPair<int, QList<QList<QVariant>>> insert(
         QList<QList<QVariant>> records,
         QList<QString> columns = QList<QString>());
-    QPair<int, QList<QList<QVariant>>> upsert(QList<QList<QVariant>> records,
+    QPair<int, QList<QList<QVariant>>> upsert(QList<QVariant> record,
                                               QList<QString> columns);
     QPair<int, QList<QList<QVariant>>> remove(
         QList<QHash<QString, QVariant>> match_query =
