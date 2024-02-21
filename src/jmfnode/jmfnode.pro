@@ -37,10 +37,3 @@ HEADERS += \
 unix|win32: LIBS += -L3rdparty/hiredis/build -lhiredis
 INCLUDEPATH += 3rdparty/hiredis
 DEPENDPATH += 3rdparty/hiredis
-
-
-
-
-
-
-
