@@ -76,3 +76,4 @@ Thumbs.db
 *.exe
 /debug
 /release
+build*/
