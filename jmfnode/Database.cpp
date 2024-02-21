@@ -205,7 +205,6 @@ QPair<int, QList<QList<QVariant>>> MySQLODBCController::upsert(
                 .arg(columns[i])
                 .arg(record_on_duplicate[i].toString());
     }
-    qDebug() << sql_cmd;
     return this->runsql(sql_cmd);
 }
 
