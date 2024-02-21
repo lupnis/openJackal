@@ -1,7 +1,7 @@
 /*
  * file name:       Configurations.h
  * created at:      2024/02/14
- * last modified:   2024/02/18
+ * last modified:   2024/02/22
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -41,18 +41,18 @@ inline QJsonObject makeDefaultConfigs() {
                                   {"task_queue_max_size", 64},
                                   {"failed_task_requeue_interval", 2},
                                   {"task_max_retries", 5},
-                                  {"task_file_slices", 8},
+                                  {"task_file_slices", 4},
                                   {"store_slices_in_memory", false},
-                                  {"slices_storage_root_path", "./tmp"},
+                                  {"slices_storage_root_path", "./temp"},
                                   {"dest_storage_root_path", "./archive"},
-                                  {"task_head_timeout", 60},
+                                  {"task_head_timeout", 120},
                                   {"task_head_max_retries", 8},
                                   {"task_fetch_timeout", 600},
                                   {"task_fetch_max_retries", 8},
                                   {"task_fetch_buffer_size", 104857500}});
 
     config_dict["node"] =
-        QHash<QString, QVariant>({{"num_runners", 2},
+        QHash<QString, QVariant>({{"num_runners", 4},
                                   {"node_task_receiving_interval", 5000}});
     return QJsonObject::fromVariantHash(config_dict);
 }
