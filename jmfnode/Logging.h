@@ -1,7 +1,7 @@
 /*
  * file name:       Logging.h
  * created at:      2024/01/18
- * last modified:   2024/02/16
+ * last modified:   2024/02/22
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -212,7 +212,7 @@ const QHash<QString, QVariant> DEFAULT_LOG_CONFIG{
 
     {"file_log", true},
     {"file_log_level", Level::INFO},
-    {"log_print_level", Level::INFO},
+    {"log_print_level", Level::DEBUG},
     {"log_stored_path", "./"},
     {"log_name", "logs"},
     {"log_append", true},
