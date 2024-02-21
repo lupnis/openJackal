@@ -34,9 +34,9 @@ HEADERS += \
     FileFetcher.h
 
 
-unix|win32: LIBS += -LE:/backends/hiredis/build -lhiredis
-INCLUDEPATH += E:/backends/hiredis
-DEPENDPATH += E:/backends/hiredis
+unix|win32: LIBS += -L3rdparty/hiredis/build -lhiredis
+INCLUDEPATH += 3rdparty/hiredis
+DEPENDPATH += 3rdparty/hiredis
 
 
 
