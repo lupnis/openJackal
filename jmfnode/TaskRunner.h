@@ -1,7 +1,7 @@
 /*
  * file name:       TaskRunner.h
  * created at:      2024/02/01
- * last modified:   2024/02/21
+ * last modified:   2024/02/22
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -80,6 +80,18 @@ struct TaskDetails {
         return *this;
     }
     bool hasTask() { return this->mirrorName.size() && this->urlPath.size(); }
+
+    operator QJsonObject() const {
+        return QJsonObject::fromVariantHash({
+            {"mirror_name", this->mirrorName},
+            {"url_path", this->urlPath},
+            {"storage_path", this->storagePath},
+            {"use_proxy",
+             (this->proxyHost != "" && this->proxyPort != 0 &&
+              this->proxyType != QNetworkProxy::ProxyType::NoProxy)},
+            {"failed_count", this->failedCount},
+        });
+    }
 };
 
 class TaskRunner : public QObject {
