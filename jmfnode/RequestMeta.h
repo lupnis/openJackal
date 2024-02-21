@@ -1,7 +1,7 @@
 /*
  * file name:       RequestMeta.h
  * created at:      2024/01/18
- * last modified:   2024/02/21
+ * last modified:   2024/02/22
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -50,12 +50,14 @@ const QHash<QString, QString> BASE_HEADERS{
 
 const QHash<QString, QString> EMPTY_DICT{};
 
+Q_NAMESPACE
 enum Method {
     GET,
     HEAD
 }; /* current JRequests::RequestMeta only supports these two methods */
 enum Mode { Unspecified, Http, Https };
 enum Status { Init, Fetching, Finished, Canceled };
+Q_ENUM_NS(Status)
 /*
  * status indicates the current running status of JRequests::RequestMeta entity,
  * if request is not at running status(Status::Fetching), the status will not be
@@ -66,6 +68,7 @@ enum Status { Init, Fetching, Finished, Canceled };
  * Canceled: the request is canceled on the process of fetching.
  */
 enum Result { Standby, Waiting, Succeeded, Failed };
+Q_ENUM_NS(Result)
 /*
  * result indicates the retrival results of the task. canceled tasks will be
  * recognized as failed.
