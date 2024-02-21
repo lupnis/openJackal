@@ -1,7 +1,7 @@
 /*
  * file name:       TaskRunner.h
  * created at:      2024/02/01
- * last modified:   2024/02/19
+ * last modified:   2024/02/21
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -9,8 +9,8 @@
 #define TASK_RUNNER_H
 
 #include <QCryptographicHash>
-#include <QTextStream>
 #include <QObject>
+#include <QTextStream>
 
 #include "FileFetcher.h"
 #include "HeaderFetcher.h"
@@ -41,8 +41,10 @@ struct TaskDetails {
     quint8 failedCount = 0;
     TaskStage currentStage = TaskStage::Init;
 
-    TaskDetails(QString mirror_name = "", QString url_path = "",
-                QString storage_path = "", QString proxy_host = "",
+    TaskDetails(QString mirror_name = "",
+                QString url_path = "",
+                QString storage_path = "",
+                QString proxy_host = "",
                 quint16 proxy_port = 0,
                 QNetworkProxy::ProxyType proxy_type =
                     QNetworkProxy::ProxyType::HttpProxy) {
@@ -86,31 +88,38 @@ class TaskRunner : public QObject {
     TaskRunner(quint32 task_queue_refresh_interval = 1000,
                quint8 task_queue_max_size = 64,
                quint8 failed_task_requeue_interval = 2,
-               quint8 task_max_retries = 5, quint8 task_file_slices = 8,
+               quint8 task_max_retries = 5,
+               quint8 task_file_slices = 8,
                bool store_slices_in_memory = true,
                QString slices_storage_root_path = "",
                QString dest_storage_root_path = "",
-               quint32 task_head_timeout = 60, quint8 task_head_max_retries = 8,
+               quint32 task_head_timeout = 60,
+               quint8 task_head_max_retries = 8,
                quint32 task_fetch_timeout = 600,
                quint8 task_fetch_max_retries = 8,
                qint64 task_fetch_buffer_size = 104857500);
     ~TaskRunner();
-    TaskRunner& operator=(const TaskRunner&){return *this;}
+    TaskRunner& operator=(const TaskRunner&) { return *this; }
 
-    bool updateConfigurations(
-        quint32 task_queue_refresh_interval = 1000,
-        quint8 task_queue_max_size = 64,
-        quint8 failed_task_requeue_interval = 2, quint8 task_max_retries = 5,
-        quint8 task_file_slices = 8, bool store_slices_in_memory = true,
-        QString slices_storage_root_path = "",
-        QString dest_storage_root_path = "", quint32 task_head_timeout = 60,
-        quint8 task_head_max_retries = 8, quint32 task_fetch_timeout = 600,
-        quint8 task_fetch_max_retries = 8,
-        qint64 task_fetch_buffer_size = 104857500);
+    bool updateConfigurations(quint32 task_queue_refresh_interval = 1000,
+                              quint8 task_queue_max_size = 64,
+                              quint8 failed_task_requeue_interval = 2,
+                              quint8 task_max_retries = 5,
+                              quint8 task_file_slices = 8,
+                              bool store_slices_in_memory = true,
+                              QString slices_storage_root_path = "",
+                              QString dest_storage_root_path = "",
+                              quint32 task_head_timeout = 60,
+                              quint8 task_head_max_retries = 8,
+                              quint32 task_fetch_timeout = 600,
+                              quint8 task_fetch_max_retries = 8,
+                              qint64 task_fetch_buffer_size = 104857500);
 
     bool addTaskToQueue(TaskDetails task, bool add_to_main_queue = true);
-    bool addTaskToQueue(QString mirror_name, QString url_path,
-                        QString storage_path, QString proxy_host = "",
+    bool addTaskToQueue(QString mirror_name,
+                        QString url_path,
+                        QString storage_path,
+                        QString proxy_host = "",
                         quint16 proxy_port = 0,
                         QNetworkProxy::ProxyType proxy_type =
                             QNetworkProxy::ProxyType::HttpProxy,
@@ -119,12 +128,14 @@ class TaskRunner : public QObject {
     QList<TaskDetails> getMainQueue() const;
     QList<TaskDetails> getLoopQueue() const;
     QList<TaskDetails> getFinishedTasks() const;
+    QList<TaskDetails> getFailedTasks() const;
     TaskDetails getTaskDetails(QString mirror_name, QString url_path) const;
     bool dropTask(QString mirror_name, QString url_path);
     void dropMainQueue();
     void dropLoopQueue();
     void dropAllQueues();
     void dropFinishedTaskRecords();
+    void dropFailedTaskRecords();
     void swapQueues();
     void mergeQueues();
     void resetFaultsCounter();
@@ -164,7 +175,7 @@ class TaskRunner : public QObject {
     void on_stage_finished();
 
    private:
-    QList<TaskDetails> main_queue, loop_queue, finished_list;
+    QList<TaskDetails> main_queue, loop_queue, finished_list, failed_list;
     JRequests::HeaderFetcher header_fetcher;
     QList<JRequests::FileFetcher*> fetchers;
     TaskDetails current_running_task;
