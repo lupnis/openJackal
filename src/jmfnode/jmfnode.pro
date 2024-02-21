@@ -33,7 +33,6 @@ HEADERS += \
     NodeController.h \
     FileFetcher.h
 
-
 unix|win32: LIBS += -L../3rdparty/hiredis/build -lhiredis
 INCLUDEPATH += ../3rdparty/hiredis
 DEPENDPATH += ../3rdparty/hiredis
