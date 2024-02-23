@@ -1,0 +1,65 @@
+{
+    "mirror_name": "qt",
+    "download": {
+        "root_url": "https://download.qt.io/",
+        "matches": {
+            "link_regex": [
+                "<tr>[\\s\\S]*?</tr>",
+                "<td>[\\s\\S]*?</td>",
+                "<a[\\s\\S]*?</a>",
+                "\\\"[\\w.\\-\\+ ]+[.\\w/]?\\\"",
+                "[\\w.\\-\\+ ]+[.\\w/]?"
+            ],
+            "dir_regex": [
+                "[\\s\\S]+/"
+            ],
+            "file_regex": [
+                "[\\w.\\-\\+ ]+"
+            ],
+            "verify_regex": [
+                "[\\w.\\-\\+ ]+.sha1",
+                "md5sums.txt"
+            ],
+            "exclude_regex": [
+                "[\\w.\\-\\+ ]+.mirrorlist"
+            ]
+        },
+        "file_verify_ref_rules": [
+            [
+                "md5sums.txt",
+                "infile_ref",
+                "lines_format",
+                "md5"
+            ],
+            [
+                "%1.sha1",
+                "arg_ref",
+                "alldoc_format",
+                "sha1"
+            ]
+        ],
+        "proxy": {
+            "use_proxy": false,
+            "proxy_host": "",
+            "proxy_port": 0,
+            "proxy_type": 0,
+            "apply_proxy": true
+        },
+        "export": {
+            "file_list": true,
+            "file_export_infile": false,
+            "file_export_exfile": true,
+            "file_list_path": "./files.jsonl",
+            "export_with_verify_info": true,
+            "dir_list": false,
+            "dir_export_infile": false,
+            "dir_export_exfile": false,
+            "dir_list_path": "./dirs.jsonl"
+        }
+    },
+    "data": {
+        "dirs": [],
+        "files": [],
+        "verifies": []
+    }
+}
