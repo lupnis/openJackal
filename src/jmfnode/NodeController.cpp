@@ -1,7 +1,7 @@
 /*
  * file name:       NodeController.cpp
  * created at:      2024/02/16
- * last modified:   2024/02/22
+ * last modified:   2024/02/23
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -200,227 +200,205 @@ void NodeController::action_start_runners() {
 }
 
 void NodeController::action_report() {
-    QList<bool> runners_running_status;
-    QList<QList<TaskDetails>> main_queues;
-    QList<QList<TaskDetails>> loop_queues;
-    QList<TaskDetails> finished_tasks;
-    QList<TaskDetails> failed_tasks;
-
-    QList<TaskDetails> current_task_details;
-    QList<QList<JRequests::Status>> current_fetcher_status;
-    QList<QList<JRequests::Status>> current_request_status;
-    QList<QList<JRequests::Result>> current_request_result;
-
-    QList<QList<QPair<qint64, qint64>>> current_fetcher_progress;
-    QList<QList<quint32>> fetchers_time_consumed;
-
+    this->logger.info("reporting status of node to database...",
+                      JLogs::Tag::PROGRESS);
     for (int i = 0; i < this->task_runners.size(); ++i) {
+        quint8 runner_running_status;
+        QJsonArray main_queue, loop_queue;
+        int finished_task_size, failed_task_size;
+        TaskDetails current_task_details;
+        QJsonArray progresses, time_consumed;
+        QJsonArray fetcher_status, request_status, request_result;
+
         this->logger.debug(
             JLogs::S("----------------Report of runner [") +
             JLogs::S(QString::number(i).rightJustified(2, '0'), GREEN) +
             "]----------------");
 
-        runners_running_status.push_back(
-            this->task_runners[i]->getIsRunnerRunning());
+        // running status
+        runner_running_status = this->task_runners[i]->getIsRunnerRunning();
         this->logger.debug(JLogs::S("Running    : ") +
-                           (runners_running_status[i]
-                                ? JLogs::S("True", GREEN)
-                                : JLogs::S("False", RED)));
+                           (runner_running_status ? JLogs::S("True", GREEN)
+                                                  : JLogs::S("False", RED)));
 
-        main_queues.push_back(this->task_runners[i]->getMainQueue());
+        // main queue
+        for (const TaskDetails& task : this->task_runners[i]->getMainQueue()) {
+            main_queue.push_back((QJsonObject)task);
+        }
         this->logger.debug(JLogs::S("Main Queue : ") +
-                           JLogs::S(main_queues[i].size(), GREEN));
+                           JLogs::S(main_queue.size(), GREEN));
 
-        loop_queues.push_back(this->task_runners[i]->getLoopQueue());
+        // loop queue
+        for (const TaskDetails& task : this->task_runners[i]->getLoopQueue()) {
+            loop_queue.push_back((QJsonObject)task);
+        }
         this->logger.debug(JLogs::S("Loop Queue : ") +
-                           JLogs::S(loop_queues[i].size(), GREEN));
+                           JLogs::S(loop_queue.size(), GREEN));
 
-        finished_tasks.append(this->task_runners[i]->getFinishedTasks());
+        // finished tasks
+        this->mysql_controller.setTable("table_jmfn_finished_tasks");
+        finished_task_size = this->task_runners[i]->getFinishedTasks().size();
+        for (const TaskDetails& task :
+             this->task_runners[i]->getFinishedTasks()) {
+            this->mysql_controller.upsert(
+                {QString("'%1'").arg(this->node_id),
+                 QString("'%1'").arg(task.mirrorName),
+                 QString("'%1'").arg(task.storagePath)},
+                {"node_id", "mirror_name", "task_path"},
+                {QString("'%1'").arg(this->node_id),
+                 QString("'%1'").arg(task.mirrorName),
+                 QString("'%1'").arg(task.storagePath)});
+        }
         this->logger.debug(
             JLogs::S("Finished   : ") +
             JLogs::S(this->task_runners[i]->getFinishedTasks().size(), GREEN));
         this->task_runners[i]->dropFinishedTaskRecords();
 
-        failed_tasks.append(this->task_runners[i]->getFailedTasks());
+        // failed tasks
+        this->mysql_controller.setTable("table_jmfn_failed_tasks");
+        failed_task_size = this->task_runners[i]->getFailedTasks().size();
+        for (const TaskDetails& task :
+             this->task_runners[i]->getFailedTasks()) {
+            this->mysql_controller.upsert(
+                {QString("'%1'").arg(this->node_id),
+                 QString("'%1'").arg(task.mirrorName),
+                 QString("'%1'").arg(task.storagePath)},
+                {"node_id", "mirror_name", "task_path"},
+                {QString("'%1'").arg(this->node_id),
+                 QString("'%1'").arg(task.mirrorName),
+                 QString("'%1'").arg(task.storagePath)});
+        }
         this->logger.debug(
             JLogs::S("Failed     : ") +
             JLogs::S(this->task_runners[i]->getFailedTasks().size(), GREEN));
         this->task_runners[i]->dropFailedTaskRecords();
 
-        current_task_details.push_back(
-            this->task_runners[i]->getCurrentTaskDetails());
+        // current task
+        current_task_details = this->task_runners[i]->getCurrentTaskDetails();
         this->logger.debug(
             JLogs::S("Current    : ") +
-            (current_task_details[i].hasTask()
-                 ? (JLogs::S(current_task_details[i].urlPath, CYAN) + " -> " +
-                    JLogs::S(current_task_details[i].storagePath, MAGENTA))
+            (current_task_details.hasTask()
+                 ? (JLogs::S(current_task_details.urlPath, CYAN) + " -> " +
+                    JLogs::S(current_task_details.storagePath, MAGENTA))
                  : (JLogs::S("No Task", YELLOW))));
-        this->logger.debug(
-            JLogs::S("           : ") +
-            JLogs::S(current_task_details[i].numFetchers, GREEN) +
-            " fetchers, failed " +
-            JLogs::S(current_task_details[i].failedCount, GREEN) + " times");
-        this->logger.debug(
-            JLogs::S("           : ") + "at stage " +
-            JLogs::S(current_task_details[i].currentStage, GREEN));
-
-        current_fetcher_status.push_back(
-            this->task_runners[i]->getCurrentFetcherStatus());
-        current_request_status.push_back(
-            this->task_runners[i]->getCurrentRequestStatus());
-        current_request_result.push_back(
-            this->task_runners[i]->getCurrentRequestResult());
-
-        current_fetcher_progress.push_back(
-            this->task_runners[i]->getCurrentFetcherProgress());
+        this->logger.debug(JLogs::S("           : ") +
+                           JLogs::S(current_task_details.numFetchers, GREEN) +
+                           " fetchers, failed " +
+                           JLogs::S(current_task_details.failedCount, GREEN) +
+                           " times");
+        this->logger.debug(JLogs::S("           : ") + "at stage " +
+                           JLogs::S(current_task_details.currentStage, GREEN));
+        for (const JRequests::Status& status :
+             this->task_runners[i]->getCurrentFetcherStatus()) {
+            fetcher_status.push_back((quint8)status);
+        }
+        for (const JRequests::Status& status :
+             this->task_runners[i]->getCurrentRequestStatus()) {
+            request_status.push_back((quint8)status);
+        }
+        for (const JRequests::Result& result :
+             this->task_runners[i]->getCurrentRequestResult()) {
+            request_result.push_back((quint8)result);
+        }
+        for (const QPair<qint64, qint64>& progress :
+             this->task_runners[i]->getCurrentFetcherProgress()) {
+            progresses.push_back(QJsonArray({progress.first, progress.second}));
+        }
         this->logger.debug(
             JLogs::S("Progress   : ") + JLogs::S("Heading (") +
-            JLogs::S(current_fetcher_progress[i][0].first, GREEN) + "/" +
-            JLogs::S(current_fetcher_progress[i][0].second, GREEN) + ")");
-        for (int j = 1; j < current_fetcher_progress[i].size(); ++j) {
+            JLogs::S(progresses[0].toArray()[0].toString(), GREEN) + "/" +
+            JLogs::S(progresses[0].toArray()[1].toString(), GREEN) + ")");
+        for (int j = 1; j < progresses.size(); ++j) {
             this->logger.debug(
                 JLogs::S("           : ") + JLogs::S("Slice [") +
                 JLogs::S(j, GREEN) + "] (" +
-                JLogs::S(current_fetcher_progress[i][j].first, GREEN) + "/" +
-                JLogs::S(current_fetcher_progress[i][j].second, GREEN) + ")");
+                JLogs::S(progresses[j].toArray()[0].toString(), GREEN) + "/" +
+                JLogs::S(progresses[j].toArray()[0].toString(), GREEN) + ")");
         }
-
-        fetchers_time_consumed.push_back(
-            this->task_runners[i]->getFetchersTimeConsumed());
+        for (const quint32& time :
+             this->task_runners[i]->getFetchersTimeConsumed()) {
+            time_consumed.push_back((qint32)time);
+        }
         this->logger.debug(JLogs::S("Est Time(s): ") + JLogs::S("Heading (") +
-                           JLogs::S(fetchers_time_consumed[i][0], GREEN) + ")");
-
-        for (int j = 1; j < current_fetcher_progress[i].size(); ++j) {
+                           JLogs::S(time_consumed[0].toString(), GREEN) + ")");
+        for (int j = 1; j < time_consumed.size(); ++j) {
             this->logger.debug(JLogs::S("           : ") + JLogs::S("Slice [") +
                                JLogs::S(j, GREEN) + "] (" +
-                               JLogs::S(fetchers_time_consumed[i][j], GREEN) +
+                               JLogs::S(time_consumed[j].toString(), GREEN) +
                                ")");
         }
-    }
-    this->logger.debug("-----------------------------------------------------");
 
-    this->logger.info("reporting status of node to database...",
-                      JLogs::Tag::PROGRESS);
+        // report node
+        this->mysql_controller.setTable("table_jmfn_node_reports");
+        this->mysql_controller.upsert(
+            {QString("'%1'").arg(this->node_id), this->task_runners.size(),
+             finished_task_size, failed_task_size},
+            {"node_id", "runners_count", "finished_tasks_count",
+             "failed_tasks_count"},
+            {QString("'%1'").arg(this->node_id), this->task_runners.size(),
+             QString("`finished_tasks_count`+%1").arg(finished_task_size),
+             QString("`failed_tasks_count`+%1").arg(failed_task_size)});
 
-    this->mysql_controller.setTable("table_jmfn_node_reports");
-    this->mysql_controller.upsert(
-        {QString("'%1'").arg(this->node_id), this->task_runners.size(),
-         finished_tasks.size(), failed_tasks.size()},
-        {"node_id", "runners_count", "finished_tasks_count",
-         "failed_tasks_count"},
-        {QString("'%1'").arg(this->node_id), this->task_runners.size(),
-         QString("`finished_tasks_count`+%1").arg(finished_tasks.size()),
-         QString("`failed_tasks_count`+%1").arg(failed_tasks.size())});
-
-    this->mysql_controller.setTable("table_jmfn_runners_reports");
-    for (int i = 0; i < this->task_runners.size(); ++i) {
-        QVariantList task_main_queue_list, task_loop_queue_list;
-        for (const JackalMFN::TaskDetails task : main_queues[i]) {
-            task_main_queue_list.push_back((QJsonObject)task);
-        }
-        for (const JackalMFN::TaskDetails task : loop_queues[i]) {
-            task_loop_queue_list.push_back((QJsonObject)task);
-        }
+        // report runner
+        this->mysql_controller.setTable("table_jmfn_runners_reports");
         this->mysql_controller.upsert(
             {QString("'%1_%2'").arg(this->node_id).arg(i),
-             (quint8)runners_running_status[i],
+             runner_running_status,
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(task_main_queue_list).toJson())),
+                 QJsonDocument::fromVariant(main_queue).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(task_loop_queue_list).toJson())),
-             QString("'%1'").arg(current_task_details[i].mirrorName),
-             QString("'%1'").arg(current_task_details[i].urlPath),
-             QString("'%1'").arg(current_task_details[i].storagePath),
-             (quint8)(current_task_details[i].proxyHost != "" &&
-                      current_task_details[i].proxyPort != 0 &&
-                      current_task_details[i].proxyType !=
+                 QJsonDocument::fromVariant(loop_queue).toJson())),
+             QString("'%1'").arg(current_task_details.mirrorName),
+             QString("'%1'").arg(current_task_details.urlPath),
+             QString("'%1'").arg(current_task_details.storagePath),
+             (quint8)(current_task_details.proxyHost != "" &&
+                      current_task_details.proxyPort != 0 &&
+                      current_task_details.proxyType !=
                           QNetworkProxy::ProxyType::NoProxy),
-             current_task_details[i].numFetchers,
-             current_task_details[i].currentStage,
+             current_task_details.numFetchers,
+             current_task_details.currentStage,
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(
-                     QVariant::fromValue(current_fetcher_progress[i]).toList())
-                     .toJson())),
+                 QJsonDocument::fromVariant(progresses).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(
-                     QVariant::fromValue(fetchers_time_consumed[i]).toList())
-                     .toJson())),
+                 QJsonDocument::fromVariant(time_consumed).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(
-                     QVariant::fromValue(current_fetcher_status[i]).toList())
-                     .toJson())),
+                 QJsonDocument::fromVariant(fetcher_status).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(
-                     QVariant::fromValue(current_request_status[i]).toList())
-                     .toJson())),
+                 QJsonDocument::fromVariant(request_status).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(
-                     QVariant::fromValue(current_request_result[i]).toList())
-                     .toJson()))},
+                 QJsonDocument::fromVariant(request_result).toJson()))},
             {"node_runner_id", "runner_running", "tasks_main_queue",
              "tasks_loop_queue", "current_mirror_name", "current_task_url",
              "current_task_dest", "use_proxy", "fetchers_count", "runner_stage",
              "progresses", "time_consumed", "fetcher_status", "request_status",
              "request_result"},
             {QString("'%1_%2'").arg(this->node_id).arg(i),
-             (quint8)runners_running_status[i],
+             runner_running_status,
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(task_main_queue_list).toJson())),
+                 QJsonDocument::fromVariant(main_queue).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(task_loop_queue_list).toJson())),
-             QString("'%1'").arg(current_task_details[i].mirrorName),
-             QString("'%1'").arg(current_task_details[i].urlPath),
-             QString("'%1'").arg(current_task_details[i].storagePath),
-             (quint8)(current_task_details[i].proxyHost != "" &&
-                      current_task_details[i].proxyPort != 0 &&
-                      current_task_details[i].proxyType !=
+                 QJsonDocument::fromVariant(loop_queue).toJson())),
+             QString("'%1'").arg(current_task_details.mirrorName),
+             QString("'%1'").arg(current_task_details.urlPath),
+             QString("'%1'").arg(current_task_details.storagePath),
+             (quint8)(current_task_details.proxyHost != "" &&
+                      current_task_details.proxyPort != 0 &&
+                      current_task_details.proxyType !=
                           QNetworkProxy::ProxyType::NoProxy),
-             current_task_details[i].numFetchers,
-             current_task_details[i].currentStage,
+             current_task_details.numFetchers,
+             current_task_details.currentStage,
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(
-                     QVariant::fromValue(current_fetcher_progress[i]).toList())
-                     .toJson())),
+                 QJsonDocument::fromVariant(progresses).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(
-                     QVariant::fromValue(fetchers_time_consumed[i]).toList())
-                     .toJson())),
+                 QJsonDocument::fromVariant(time_consumed).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(
-                     QVariant::fromValue(current_fetcher_status[i]).toList())
-                     .toJson())),
+                 QJsonDocument::fromVariant(fetcher_status).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(
-                     QVariant::fromValue(current_request_status[i]).toList())
-                     .toJson())),
+                 QJsonDocument::fromVariant(request_status).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(
-                     QVariant::fromValue(current_request_result[i]).toList())
-                     .toJson()))});
+                 QJsonDocument::fromVariant(request_result).toJson()))});
     }
-
-    this->mysql_controller.setTable("table_jmfn_finished_tasks");
-    for (const TaskDetails& task : finished_tasks) {
-        this->mysql_controller.upsert({QString("'%1'").arg(this->node_id),
-                                       QString("'%1'").arg(task.mirrorName),
-                                       QString("'%1'").arg(task.storagePath)},
-                                      {"node_id", "mirror_name", "task_path"},
-                                      {QString("'%1'").arg(this->node_id),
-                                       QString("'%1'").arg(task.mirrorName),
-                                       QString("'%1'").arg(task.storagePath)});
-    }
-
-    this->mysql_controller.setTable("table_jmfn_failed_tasks");
-    for (const TaskDetails& task : failed_tasks) {
-        this->mysql_controller.upsert({QString("'%1'").arg(this->node_id),
-                                       QString("'%1'").arg(task.mirrorName),
-                                       QString("'%1'").arg(task.storagePath)},
-                                      {"node_id", "mirror_name", "task_path"},
-                                      {QString("'%1'").arg(this->node_id),
-                                       QString("'%1'").arg(task.mirrorName),
-                                       QString("'%1'").arg(task.storagePath)});
-    }
-
+    this->logger.debug("-----------------------------------------------------");
     this->logger.info("reports uploaded.", JLogs::Tag::SUCCEEDED);
 }
 
