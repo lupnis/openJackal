@@ -1,7 +1,7 @@
 /*
  * file name:       TaskRunner.cpp
  * created at:      2024/02/01
- * last modified:   2024/02/21
+ * last modified:   2024/02/23
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -225,6 +225,9 @@ bool TaskRunner::setAsNextTask(QString mirror_name, QString url_path) {
 QList<JRequests::Status> TaskRunner::getCurrentFetcherStatus() const {
     QList<JRequests::Status> status;
     status.push_back(this->header_fetcher.getFetcherStatus());
+    if (!this->runner_running) {
+        return status;
+    }
     for (int i = 0; i < this->current_running_task.numFetchers; ++i) {
         status.push_back(this->fetchers[i]->getFetcherStatus());
     }
@@ -233,6 +236,9 @@ QList<JRequests::Status> TaskRunner::getCurrentFetcherStatus() const {
 QList<JRequests::Status> TaskRunner::getCurrentRequestStatus() const {
     QList<JRequests::Status> status;
     status.push_back(this->header_fetcher.getRequestStatus());
+    if (!this->runner_running) {
+        return status;
+    }
     for (int i = 0; i < this->current_running_task.numFetchers; ++i) {
         status.push_back(this->fetchers[i]->getRequestStatus());
     }
@@ -241,6 +247,9 @@ QList<JRequests::Status> TaskRunner::getCurrentRequestStatus() const {
 QList<JRequests::Result> TaskRunner::getCurrentRequestResult() const {
     QList<JRequests::Result> result;
     result.push_back(this->header_fetcher.getResult());
+    if (!this->runner_running) {
+        return result;
+    }
     for (int i = 0; i < this->current_running_task.numFetchers; ++i) {
         result.push_back(this->fetchers[i]->getResult());
     }
@@ -249,6 +258,9 @@ QList<JRequests::Result> TaskRunner::getCurrentRequestResult() const {
 QList<QPair<qint64, qint64>> TaskRunner::getCurrentFetcherProgress() const {
     QList<QPair<qint64, qint64>> progress;
     progress.push_back(this->header_fetcher.getProgress());
+    if (!this->runner_running) {
+        return progress;
+    }
     for (int i = 0; i < this->current_running_task.numFetchers; ++i) {
         progress.push_back(this->fetchers[i]->getProgress());
     }
@@ -257,6 +269,9 @@ QList<QPair<qint64, qint64>> TaskRunner::getCurrentFetcherProgress() const {
 QList<quint32> TaskRunner::getFetchersTimeConsumed() const {
     QList<quint32> consumed;
     consumed.push_back(this->header_fetcher.getTimeConsumed());
+    if (!this->runner_running) {
+        return consumed;
+    }
     for (int i = 0; i < this->current_running_task.numFetchers; ++i) {
         consumed.push_back(this->fetchers[i]->getTimeConsumed());
     }
@@ -314,7 +329,7 @@ void TaskRunner::stopRunnerLoop() {
     }
     this->fetchers.clear();
     if (this->stage_thread_ptr != nullptr) {
-        this->stage_thread_ptr->quit();
+        this->stage_thread_ptr->terminate();
         this->stage_thread_ptr = nullptr;
     }
     this->lock.tryLock();
@@ -480,6 +495,7 @@ void TaskRunner::on_stage_merging() {
                 }
             }
         }
+        dest_file.close();
         this->current_running_task.currentStage = TaskStage::CleaningCache;
         this->stage_thread_ptr = nullptr;
         QThread::currentThread()->quit();
