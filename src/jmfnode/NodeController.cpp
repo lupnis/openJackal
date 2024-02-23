@@ -398,10 +398,10 @@ void NodeController::action_report() {
         this->mysql_controller.upsert(
             {QString("'%1_%2'").arg(this->node_id).arg(i),
              runner_running_status,
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(main_queue).toJson())),
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(loop_queue).toJson())),
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(main_queue).toJson())),
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(loop_queue).toJson())),
              QString("'%1'").arg(current_task_details.mirrorName),
              QString("'%1'").arg(current_task_details.urlPath),
              QString("'%1'").arg(current_task_details.storagePath),
@@ -411,16 +411,16 @@ void NodeController::action_report() {
                           QNetworkProxy::ProxyType::NoProxy),
              current_task_details.numFetchers,
              current_task_details.currentStage,
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(progresses).toJson())),
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(time_consumed).toJson())),
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(fetcher_status).toJson())),
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(request_status).toJson())),
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(request_result).toJson()))},
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(progresses).toJson())),
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(time_consumed).toJson())),
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(fetcher_status).toJson())),
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(request_status).toJson())),
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(request_result).toJson()))},
             {"node_runner_id", "runner_running", "tasks_main_queue",
              "tasks_loop_queue", "current_mirror_name", "current_task_url",
              "current_task_dest", "use_proxy", "fetchers_count", "runner_stage",
@@ -428,10 +428,10 @@ void NodeController::action_report() {
              "request_result"},
             {QString("'%1_%2'").arg(this->node_id).arg(i),
              runner_running_status,
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(main_queue).toJson())),
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(loop_queue).toJson())),
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(main_queue).toJson())),
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(loop_queue).toJson())),
              QString("'%1'").arg(current_task_details.mirrorName),
              QString("'%1'").arg(current_task_details.urlPath),
              QString("'%1'").arg(current_task_details.storagePath),
@@ -441,16 +441,16 @@ void NodeController::action_report() {
                           QNetworkProxy::ProxyType::NoProxy),
              current_task_details.numFetchers,
              current_task_details.currentStage,
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(progresses).toJson())),
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(time_consumed).toJson())),
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(fetcher_status).toJson())),
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(request_status).toJson())),
-             QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument(request_result).toJson()))});
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(progresses).toJson())),
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(time_consumed).toJson())),
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(fetcher_status).toJson())),
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(request_status).toJson())),
+             QString("'%1'").arg(
+                 QString::fromUtf8(QJsonDocument(request_result).toJson()))});
     }
     this->logger.debug("-----------------------------------------------------");
     this->logger.info("reports uploaded.", JLogs::Tag::SUCCEEDED);
