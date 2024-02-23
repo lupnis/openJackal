@@ -1,7 +1,7 @@
 /*
  * file name:       NodeController.cpp
  * created at:      2024/02/16
- * last modified:   2024/02/23
+ * last modified:   2024/02/24
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -399,9 +399,9 @@ void NodeController::action_report() {
             {QString("'%1_%2'").arg(this->node_id).arg(i),
              runner_running_status,
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(main_queue).toJson())),
+                 QJsonDocument(main_queue).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(loop_queue).toJson())),
+                 QJsonDocument(loop_queue).toJson())),
              QString("'%1'").arg(current_task_details.mirrorName),
              QString("'%1'").arg(current_task_details.urlPath),
              QString("'%1'").arg(current_task_details.storagePath),
@@ -412,15 +412,15 @@ void NodeController::action_report() {
              current_task_details.numFetchers,
              current_task_details.currentStage,
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(progresses).toJson())),
+                 QJsonDocument(progresses).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(time_consumed).toJson())),
+                 QJsonDocument(time_consumed).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(fetcher_status).toJson())),
+                 QJsonDocument(fetcher_status).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(request_status).toJson())),
+                 QJsonDocument(request_status).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(request_result).toJson()))},
+                 QJsonDocument(request_result).toJson()))},
             {"node_runner_id", "runner_running", "tasks_main_queue",
              "tasks_loop_queue", "current_mirror_name", "current_task_url",
              "current_task_dest", "use_proxy", "fetchers_count", "runner_stage",
@@ -429,9 +429,9 @@ void NodeController::action_report() {
             {QString("'%1_%2'").arg(this->node_id).arg(i),
              runner_running_status,
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(main_queue).toJson())),
+                 QJsonDocument(main_queue).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(loop_queue).toJson())),
+                 QJsonDocument(loop_queue).toJson())),
              QString("'%1'").arg(current_task_details.mirrorName),
              QString("'%1'").arg(current_task_details.urlPath),
              QString("'%1'").arg(current_task_details.storagePath),
@@ -442,15 +442,15 @@ void NodeController::action_report() {
              current_task_details.numFetchers,
              current_task_details.currentStage,
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(progresses).toJson())),
+                 QJsonDocument(progresses).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(time_consumed).toJson())),
+                 QJsonDocument(time_consumed).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(fetcher_status).toJson())),
+                 QJsonDocument(fetcher_status).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(request_status).toJson())),
+                 QJsonDocument(request_status).toJson())),
              QString("'%1'").arg(QString::fromUtf8(
-                 QJsonDocument::fromVariant(request_result).toJson()))});
+                 QJsonDocument(request_result).toJson()))});
     }
     this->logger.debug("-----------------------------------------------------");
     this->logger.info("reports uploaded.", JLogs::Tag::SUCCEEDED);

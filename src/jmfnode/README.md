@@ -54,4 +54,8 @@ DEPENDPATH += ../3rdparty/hiredis # <- change to the path of hiredis source
 
 On Windows, directly double click the **jmfnode.pro**, enter Qt Creator, auto configure and then press build to build the application.
 
+#### Run jmfnode
+
+
+
 ------
