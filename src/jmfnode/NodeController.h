@@ -1,7 +1,7 @@
 /*
  * file name:       NodeController.h
  * created at:      2024/02/14
- * last modified:   2024/02/19
+ * last modified:   2024/02/23
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -36,6 +36,7 @@ class NodeController : public QObject {
     void stopNode();
 
    private:
+    void action_terminate();
     void action_stop_runners();
     void action_start_runners();
     void action_report();

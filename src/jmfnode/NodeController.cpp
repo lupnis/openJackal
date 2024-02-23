@@ -152,29 +152,29 @@ void NodeController::startNode() {
 }
 
 void NodeController::stopNode() {
-    this->logger.warn("stopping node controller...", JLogs::Tag::PROGRESS);
+    this->logger.critical("stopping node controller...", JLogs::Tag::PROGRESS);
 
-    this->node_timer->stop();
-    this->logger.warn("[1/5] node timer stopped.", JLogs::Tag::DONE);
+    this->action_terminate();
+    this->logger.critical("[1/5] terminate tasks executed.", JLogs::Tag::DONE);
 
     this->mysql_controller.disconnect();
-    this->logger.warn("[2/5] mysql odbc connector disconnected.",
-                      JLogs::Tag::DONE);
+    this->logger.critical("[2/5] mysql odbc connector disconnected.",
+                          JLogs::Tag::DONE);
 
     this->redis_controller.rpush("jackalmfn:global:down", {this->node_id});
-    this->logger.warn(JLogs::S("[3/5] ") +
-                          "node id: " + JLogs::S(this->node_id, CYAN) +
-                          " added to downlist in redis.",
-                      JLogs::Tag::DONE);
+    this->logger.critical(JLogs::S("[3/5] ") +
+                              "node id: " + JLogs::S(this->node_id, CYAN) +
+                              " added to downlist in redis.",
+                          JLogs::Tag::DONE);
 
     this->redis_controller.disconnect();
-    this->logger.warn("[4/5] redis disconnected.", JLogs::Tag::DONE);
+    this->logger.critical("[4/5] redis disconnected.", JLogs::Tag::DONE);
 
     for (int i = 0; i < this->task_runners.size(); ++i) {
         this->task_runners[i]->stopRunnerLoop();
     }
-    this->logger.warn("[5/5] runners stopped.", JLogs::Tag::DONE);
-    this->logger.warn("node controller stopped.", JLogs::Tag::DONE);
+    this->logger.critical("[5/5] runners stopped.", JLogs::Tag::DONE);
+    this->logger.critical("node controller stopped.", JLogs::Tag::DONE);
 }
 
 void NodeController::action_stop_runners() {
@@ -183,6 +183,56 @@ void NodeController::action_stop_runners() {
         this->task_runners[i]->stopRunnerLoop();
     }
     this->logger.info("runners stopped.", JLogs::Tag::SUCCEEDED);
+}
+
+void NodeController::action_terminate() {
+    this->logger.critical("shutdown command received, quitting...",
+                          JLogs::Tag::PROGRESS);
+    this->node_timer->stop();
+    this->action_stop_runners();
+    this->action_report();
+    this->logger.critical("repushing unfinished tasks...",
+                          JLogs::Tag::PROGRESS);
+    QString stream_name =
+        QString("jackalmfn:%1:%2").arg(this->node_id).arg("squeue");
+    for (int i = 0; i < this->task_runners.size(); ++i) {
+        for (TaskDetails& task : this->task_runners[i]->getMainQueue()) {
+            if (task.hasTask()) {
+                this->redis_controller.xadd(
+                    stream_name,
+                    {{"mname", task.mirrorName},
+                     {"furl", task.urlPath},
+                     {"fpath", task.storagePath},
+                     {"phost", QString("\"%1\"").arg(task.proxyHost)},
+                     {"pport", task.proxyPort},
+                     {"ptype", (quint8)task.proxyType}});
+            }
+        }
+        for (TaskDetails& task : this->task_runners[i]->getLoopQueue()) {
+            if (task.hasTask()) {
+                this->redis_controller.xadd(
+                    stream_name,
+                    {{"mname", task.mirrorName},
+                     {"furl", task.urlPath},
+                     {"fpath", task.storagePath},
+                     {"phost", QString("\"%1\"").arg(task.proxyHost)},
+                     {"pport", task.proxyPort},
+                     {"ptype", (quint8)task.proxyType}});
+            }
+        }
+        TaskDetails task = this->task_runners[i]->getCurrentTaskDetails();
+        if (task.hasTask()) {
+            this->redis_controller.xadd(
+                stream_name, {{"mname", task.mirrorName},
+                              {"furl", task.urlPath},
+                              {"fpath", task.storagePath},
+                              {"phost", QString("\"%1\"").arg(task.proxyHost)},
+                              {"pport", task.proxyPort},
+                              {"ptype", (quint8)task.proxyType}});
+        }
+    }
+    this->logger.critical("unfinished tasks repushed to redis.",
+                          JLogs::Tag::SUCCEEDED);
 }
 
 void NodeController::action_start_runners() {
@@ -288,44 +338,48 @@ void NodeController::action_report() {
                            " times");
         this->logger.debug(JLogs::S("           : ") + "at stage " +
                            JLogs::S(current_task_details.currentStage, GREEN));
-        for (const JRequests::Status& status :
-             this->task_runners[i]->getCurrentFetcherStatus()) {
-            fetcher_status.push_back((quint8)status);
+        QList<JRequests::Status> fstatus =
+            this->task_runners[i]->getCurrentFetcherStatus();
+        for (int j = 0; j < fstatus.size(); ++j) {
+            fetcher_status.push_back((quint8)fstatus[j]);
         }
-        for (const JRequests::Status& status :
-             this->task_runners[i]->getCurrentRequestStatus()) {
-            request_status.push_back((quint8)status);
+        QList<JRequests::Status> rstatus =
+            this->task_runners[i]->getCurrentRequestStatus();
+        for (int j = 0; j < rstatus.size(); ++j) {
+            request_status.push_back((quint8)rstatus[j]);
         }
-        for (const JRequests::Result& result :
-             this->task_runners[i]->getCurrentRequestResult()) {
-            request_result.push_back((quint8)result);
+        QList<JRequests::Result> rresult =
+            this->task_runners[i]->getCurrentRequestResult();
+        for (int j = 0; j < rresult.size(); ++j) {
+            request_result.push_back((quint8)rresult[j]);
         }
-        for (const QPair<qint64, qint64>& progress :
-             this->task_runners[i]->getCurrentFetcherProgress()) {
-            progresses.push_back(QJsonArray({progress.first, progress.second}));
+        QList<QPair<qint64, qint64>> fprogress =
+            this->task_runners[i]->getCurrentFetcherProgress();
+        for (int j = 0; j < rresult.size(); ++j) {
+            progresses.push_back(
+                QJsonArray({fprogress[j].first, fprogress[j].second}));
         }
         this->logger.debug(
             JLogs::S("Progress   : ") + JLogs::S("Heading (") +
-            JLogs::S(progresses[0].toArray()[0].toString(), GREEN) + "/" +
-            JLogs::S(progresses[0].toArray()[1].toString(), GREEN) + ")");
+            JLogs::S(progresses[0].toArray()[0].toInt(), GREEN) + "/" +
+            JLogs::S(progresses[0].toArray()[1].toInt(), GREEN) + ")");
         for (int j = 1; j < progresses.size(); ++j) {
             this->logger.debug(
                 JLogs::S("           : ") + JLogs::S("Slice [") +
                 JLogs::S(j, GREEN) + "] (" +
-                JLogs::S(progresses[j].toArray()[0].toString(), GREEN) + "/" +
-                JLogs::S(progresses[j].toArray()[0].toString(), GREEN) + ")");
+                JLogs::S(progresses[j].toArray()[0].toInt(), GREEN) + "/" +
+                JLogs::S(progresses[j].toArray()[0].toInt(), GREEN) + ")");
         }
-        for (const quint32& time :
-             this->task_runners[i]->getFetchersTimeConsumed()) {
-            time_consumed.push_back((qint32)time);
+        QList<quint32> ftime = this->task_runners[i]->getFetchersTimeConsumed();
+        for (int j = 0; j < ftime.size(); ++j) {
+            time_consumed.push_back((qint32)ftime[j]);
         }
         this->logger.debug(JLogs::S("Est Time(s): ") + JLogs::S("Heading (") +
-                           JLogs::S(time_consumed[0].toString(), GREEN) + ")");
+                           JLogs::S(time_consumed[0].toInt(), GREEN) + ")");
         for (int j = 1; j < time_consumed.size(); ++j) {
             this->logger.debug(JLogs::S("           : ") + JLogs::S("Slice [") +
                                JLogs::S(j, GREEN) + "] (" +
-                               JLogs::S(time_consumed[j].toString(), GREEN) +
-                               ")");
+                               JLogs::S(time_consumed[j].toInt(), GREEN) + ")");
         }
 
         // report node
@@ -432,8 +486,6 @@ void NodeController::onNodeTimerTimeout() {
     if (converted) {
         switch (action_index) {
             case NodeActions::ShutdownNode:
-                this->logger.critical("shutdown command received, quitting...",
-                                      JLogs::Tag::PROGRESS);
                 QCoreApplication::quit();
                 break;
             case NodeActions::StopRunners:

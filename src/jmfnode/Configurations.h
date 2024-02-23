@@ -1,7 +1,7 @@
 /*
  * file name:       Configurations.h
  * created at:      2024/02/14
- * last modified:   2024/02/22
+ * last modified:   2024/02/23
  * author:          lupnis<lupnisj@gmail.com>
  */
 
@@ -37,11 +37,11 @@ inline QJsonObject makeDefaultConfigs() {
                                                      {"db", 0}});
 
     config_dict["runners"] =
-        QHash<QString, QVariant>({{"task_queue_refresh_interval", 1000},
+        QHash<QString, QVariant>({{"task_queue_refresh_interval", 50},
                                   {"task_queue_max_size", 64},
                                   {"failed_task_requeue_interval", 2},
                                   {"task_max_retries", 5},
-                                  {"task_file_slices", 4},
+                                  {"task_file_slices", 16},
                                   {"store_slices_in_memory", false},
                                   {"slices_storage_root_path", "./temp"},
                                   {"dest_storage_root_path", "./archive"},
@@ -52,7 +52,7 @@ inline QJsonObject makeDefaultConfigs() {
                                   {"task_fetch_buffer_size", 104857500}});
 
     config_dict["node"] =
-        QHash<QString, QVariant>({{"num_runners", 4},
+        QHash<QString, QVariant>({{"num_runners", 2},
                                   {"node_task_receiving_interval", 5000}});
     return QJsonObject::fromVariantHash(config_dict);
 }
