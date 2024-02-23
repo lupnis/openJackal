@@ -329,7 +329,6 @@ void TaskRunner::stopRunnerLoop() {
     }
     this->fetchers.clear();
     if (this->stage_thread_ptr != nullptr) {
-        this->stage_thread_ptr->terminate();
         this->stage_thread_ptr = nullptr;
     }
     this->lock.tryLock();
