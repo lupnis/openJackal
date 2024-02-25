@@ -1,5 +1,6 @@
 {
     "mirror_name": "qt",
+    "save_prefix": "",
     "download": {
         "root_url": "https://download.qt.io/",
         "matches": {
